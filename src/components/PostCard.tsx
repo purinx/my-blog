@@ -1,16 +1,8 @@
 import { css } from 'hono/css'
 import type { FC } from 'hono/jsx'
+import type { PostSummary } from '../backend/repositories/postRepository'
 
-export type Post = {
-	id: string
-	title: string
-	slug: string
-	date: string
-	excerpt: string
-	content: string
-}
-
-const PostCard: FC<{ post: Post }> = ({ post }) => {
+const PostCard: FC<{ post: PostSummary }> = ({ post }) => {
 	const cardStyle = css`
 		display: block;
 		border: 1px solid #eee;
@@ -35,7 +27,7 @@ const PostCard: FC<{ post: Post }> = ({ post }) => {
 	return (
 		<a class={cardStyle} href={`/posts/${post.slug}`}>
 			<h2 class={titleStyle}>{post.title}</h2>
-			<p class={dateStyle}>{post.date}</p>
+			<p class={dateStyle}>{post.publishedAt}</p>
 			<p>{post.excerpt}</p>
 		</a>
 	)

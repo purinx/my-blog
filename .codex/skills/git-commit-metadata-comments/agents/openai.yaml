@@ -1,4 +1,4 @@
 interface:
-  display_name: "Git Commit Metadata Comments"
-  short_description: "Append AI metadata comments to git commits"
-  default_prompt: "When preparing a git commit, append comment lines for Model, Reasoning, and Prompt."
+  display_name: 'Git Commit Metadata Comments'
+  short_description: 'Append AI metadata comments to git commits'
+  default_prompt: 'When preparing a git commit, append comment lines for Model, Reasoning, and Prompt.'
