@@ -87,10 +87,26 @@ app.get('/posts/:slug', (c) => {
 	}
 
 	const articleStyle = css`
-		h2 { margin-top: 2rem; color: #444; }
-		ul, ol { padding-left: 1.5rem; margin: 1rem 0; }
-		code { background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 4px; }
-		pre { background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+		h2 {
+			margin-top: 2rem;
+			color: #444;
+		}
+		ul,
+		ol {
+			padding-left: 1.5rem;
+			margin: 1rem 0;
+		}
+		code {
+			background: #f5f5f5;
+			padding: 0.2rem 0.4rem;
+			border-radius: 4px;
+		}
+		pre {
+			background: #f5f5f5;
+			padding: 1rem;
+			border-radius: 8px;
+			overflow-x: auto;
+		}
 	`
 	const dateStyle = css`
 		color: #888;

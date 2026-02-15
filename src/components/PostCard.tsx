@@ -17,12 +17,19 @@ const PostCard: FC<{ post: Post }> = ({ post }) => {
 		padding: 1.5rem;
 		margin-bottom: 1.5rem;
 		transition: box-shadow 0.2s;
-		&:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+		&:hover {
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
 	`
 	const titleStyle = css`
 		margin: 0 0 0.5rem;
-		a { text-decoration: none; color: #333; }
-		a:hover { color: #667eea; }
+		a {
+			text-decoration: none;
+			color: #333;
+		}
+		a:hover {
+			color: #667eea;
+		}
 	`
 	const dateStyle = css`
 		color: #888;
@@ -30,13 +37,13 @@ const PostCard: FC<{ post: Post }> = ({ post }) => {
 	`
 
 	return (
-		<article class={cardStyle}>
-			<h2 class={titleStyle}>
-				<a href={`/posts/${post.slug}`}>{post.title}</a>
-			</h2>
-			<p class={dateStyle}>{post.date}</p>
-			<p>{post.excerpt}</p>
-		</article>
+		<a href={`/posts/${post.slug}`}>
+			<article class={cardStyle}>
+				<h2 class={titleStyle}>{post.title}</h2>
+				<p class={dateStyle}>{post.date}</p>
+				<p>{post.excerpt}</p>
+			</article>
+		</a>
 	)
 }
 
