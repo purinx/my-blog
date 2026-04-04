@@ -1,6 +1,6 @@
 import { css } from "hono/css";
 import type { FC } from "hono/jsx";
-import type { PostRecord } from "../../../backend/repositories/postRepository";
+import type { PostRecord } from "../../../backend/repositories/post-repository";
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);

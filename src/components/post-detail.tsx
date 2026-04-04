@@ -1,9 +1,9 @@
 import { css } from "hono/css";
 import type { FC } from "hono/jsx";
-import type { PostRecord } from "../backend/repositories/postRepository";
-import PostArticle from "../features/post/components/PostArticle";
-import TocSidebar from "../features/post/components/TocSidebar";
-import Layout from "../ui/Layout";
+import type { PostRecord } from "../backend/repositories/post-repository";
+import PostArticle from "../features/post/components/post-article";
+import TocSidebar from "../features/post/components/toc-sidebar";
+import Layout from "../ui/layout";
 
 const PostDetail: FC<{ post: PostRecord; content: string }> = ({ post, content }) => {
   const wrapperStyle = css`

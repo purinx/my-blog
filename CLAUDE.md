@@ -41,9 +41,14 @@ This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 
 ## Coding Guideline
 
+### General
+
+- ファイル名はkebab-caseで記載すること
+- 各モジュールを実装した際は、単体テストも実装することテストも実装すること
+
 ### Frontend
 
-- なるべくコンポーネントの責務は細かく細かく分けるように、
+- なるべくコンポーネントの責務は細かく分けるように、
   - src/ui
     - ui コンポーネント
   - src/features/
