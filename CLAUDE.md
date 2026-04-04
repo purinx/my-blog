@@ -38,3 +38,33 @@ This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 - `wrangler.toml` configures Cloudflare Pages with D1 binding `DB` and R2 binding `POSTS_BUCKET`.
 - DB migrations are in `migrations/` and applied via wrangler (`database_id` in wrangler.toml is a placeholder for local dev).
 - `vite-plus` wraps Vite; `@hono/vite-cloudflare-pages` and `@hono/vite-dev-server` handle local dev and bundling.
+
+## Coding Guideline
+
+### Frontend
+
+- なるべくコンポーネントの責務は細かく細かく分けるように、
+  - src/ui
+    - ui コンポーネント
+  - src/features/
+    - 単一の機能ごとのパッケージング。配下にさらにディレクトリを掘って良い
+    - eg. components/ hooks/ 
+  - src/components/
+    - src/index.tsx から直接参照するコンテナーコンポーネント  
+
+### Backend
+
+```
+- backend
+  - repositories
+  - controllers
+  - utils
+```
+
+- Repository 
+  - DBとの処理はトランザクションレベルでrepositoryに切り出すこと
+- Controller
+  - 各 REST Resource毎にcontrollerに切り出すこと
+- Utils
+  - 共通のユーティリティーは utils に切り出すこと
+

@@ -1,6 +1,6 @@
 import { css } from "hono/css";
 import type { FC } from "hono/jsx";
-import type { PostSummary } from "../backend/repositories/postRepository";
+import type { PostSummary } from "../../../backend/repositories/postRepository";
 
 const PostCard: FC<{ post: PostSummary }> = ({ post }) => {
   const cardStyle = css`

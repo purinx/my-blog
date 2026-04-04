@@ -9,11 +9,10 @@ import {
   listPublishedPosts,
   updatePost,
 } from "./backend/repositories/postRepository";
-import Layout from "./components/Layout";
-import PostCard from "./components/PostCard";
 import PostDetail from "./components/PostDetail";
+import PostCard from "./features/posts/components/PostCard";
+import Layout from "./ui/Layout";
 import { type AppContext, type Bindings, getDb, getPostsBucket } from "./db";
-import { renderMarkdown } from "./utils/markdown";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -48,7 +47,6 @@ const asRecord = (value: unknown) => {
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
-
 
 app.use("/api/*", async (c, next) => {
   const unauthorized = requireApiKey(c);
@@ -122,11 +120,7 @@ app.get("/posts/:slug", async (c) => {
     }
     c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
 
-    const { html: contentHtml, toc } = await renderMarkdown(result.content);
-
-    return c.html(
-      <PostDetail post={result.post} contentHtml={contentHtml} toc={toc} />,
-    );
+    return c.html(<PostDetail post={result.post} content={result.content} />);
   } catch (error) {
     console.error(error);
     return c.html(
