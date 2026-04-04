@@ -1,14 +1,16 @@
 import { Style, css } from "hono/css";
-import type { FC } from "hono/jsx";
+import type { FC, PropsWithChildren } from "hono/jsx";
 
-const Layout: FC = ({ children }) => {
+const Layout: FC<PropsWithChildren<{ wide?: boolean }>> = ({ children, wide }) => {
+  const maxWidth = wide ? "1100px" : "800px";
+
   const headerStyle = css`
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 2rem 0;
   `;
   const navStyle = css`
-    max-width: 800px;
+    max-width: ${maxWidth};
     margin: 0 auto;
     padding: 0 1rem;
     display: flex;
@@ -22,7 +24,7 @@ const Layout: FC = ({ children }) => {
     color: white;
   `;
   const mainStyle = css`
-    max-width: 800px;
+    max-width: ${maxWidth};
     margin: 2rem auto;
     padding: 0 1rem;
   `;

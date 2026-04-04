@@ -11,7 +11,9 @@ import {
 } from "./backend/repositories/postRepository";
 import Layout from "./components/Layout";
 import PostCard from "./components/PostCard";
+import PostDetail from "./components/PostDetail";
 import { type AppContext, type Bindings, getDb, getPostsBucket } from "./db";
+import { renderMarkdown } from "./utils/markdown";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -47,16 +49,6 @@ const asRecord = (value: unknown) => {
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 
-const renderMarkdown = (content: string) =>
-  content
-    .split("\n")
-    .map((line) => {
-      if (line.startsWith("## ")) return `<h2>${line.slice(3)}</h2>`;
-      if (line.startsWith("- ")) return `<li>${line.slice(2)}</li>`;
-      if (line.trim() === "") return "";
-      return `<p>${line}</p>`;
-    })
-    .join("\n");
 
 app.use("/api/*", async (c, next) => {
   const unauthorized = requireApiKey(c);
@@ -130,50 +122,10 @@ app.get("/posts/:slug", async (c) => {
     }
     c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
 
-    const contentHtml = renderMarkdown(result.content);
-
-    const articleStyle = css`
-      h2 {
-        margin-top: 2rem;
-        color: #444;
-      }
-      ul,
-      ol {
-        padding-left: 1.5rem;
-        margin: 1rem 0;
-      }
-      code {
-        background: #f5f5f5;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-      }
-      pre {
-        background: #f5f5f5;
-        padding: 1rem;
-        border-radius: 8px;
-        overflow-x: auto;
-      }
-    `;
-    const dateStyle = css`
-      color: #888;
-      margin-bottom: 2rem;
-    `;
-    const backLinkStyle = css`
-      display: inline-block;
-      margin-top: 2rem;
-    `;
+    const { html: contentHtml, toc } = await renderMarkdown(result.content);
 
     return c.html(
-      <Layout>
-        <article class={articleStyle}>
-          <h1>{result.post.title}</h1>
-          <p class={dateStyle}>{result.post.publishedAt}</p>
-          <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
-        </article>
-        <a href="/" class={backLinkStyle}>
-          ← Back to Home
-        </a>
-      </Layout>,
+      <PostDetail post={result.post} contentHtml={contentHtml} toc={toc} />,
     );
   } catch (error) {
     console.error(error);
