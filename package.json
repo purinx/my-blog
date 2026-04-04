@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "vp dev",
     "build": "vp build",
-    "preview": "wrangler dev",
+    "preview": "wrangler pages dev",
     "deploy": "wrangler deploy",
     "lint": "vp lint",
     "format": "vp fmt",
     "check": "vp check",
-    "check:fix": "vp check --fix"
+    "check:fix": "vp check --fix",
+    "sqlite": "sqlite3 $(find .wrangler/state/v3/d1 -name '*.sqlite' | head -1)"
   },
   "dependencies": {
     "hono": "^4.6.0",
