@@ -1,7 +1,6 @@
 import { css } from "hono/css";
-import type { FC } from "hono/jsx";
 
-const TocSidebar: FC = () => {
+export function TocSidebar() {
   const sidebarStyle = css`
     position: sticky;
     top: 2rem;
@@ -41,6 +40,4 @@ const TocSidebar: FC = () => {
       </div>
     </aside>
   );
-};
-
-export { TocSidebar };
+}

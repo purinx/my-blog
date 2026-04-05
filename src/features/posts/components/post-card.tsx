@@ -1,8 +1,7 @@
 import { css } from "hono/css";
-import type { FC } from "hono/jsx";
 import type { PostSummary } from "../../../backend/repositories/post-repository";
 
-const PostCard: FC<{ post: PostSummary }> = ({ post }) => {
+export function PostCard({ post }: { post: PostSummary }) {
   const cardStyle = css`
     display: block;
     border: 1px solid #eee;
@@ -31,6 +30,4 @@ const PostCard: FC<{ post: PostSummary }> = ({ post }) => {
       <p>{post.excerpt}</p>
     </a>
   );
-};
-
-export { PostCard };
+}

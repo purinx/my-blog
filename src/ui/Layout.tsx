@@ -1,7 +1,7 @@
 import { Style, css } from "hono/css";
-import type { FC, PropsWithChildren } from "hono/jsx";
+import type { PropsWithChildren } from "hono/jsx";
 
-const Layout: FC<PropsWithChildren<{ wide?: boolean }>> = ({ children, wide }) => {
+export function Layout({ children, wide }: PropsWithChildren<{ wide?: boolean }>) {
   const maxWidth = wide ? "1100px" : "800px";
 
   const headerStyle = css`
@@ -66,6 +66,4 @@ const Layout: FC<PropsWithChildren<{ wide?: boolean }>> = ({ children, wide }) =
       </body>
     </html>
   );
-};
-
-export { Layout };
+}

@@ -50,26 +50,26 @@ export type UpdatePostResult = { ok: true; post: PostRecord } | { ok: false; rea
 
 export type DeletePostResult = { ok: true } | { ok: false; reason: "not_found" };
 
-const computeContentMeta = async (content: string) => {
+async function computeContentMeta(content: string) {
   const bytes = encoder.encode(content);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   const hash = Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
   return { length: bytes.length, hash };
-};
+}
 
-const readContent = async (bucket: R2Bucket, contentKey: string) => {
+async function readContent(bucket: R2Bucket, contentKey: string) {
   const object = await bucket.get(contentKey);
   if (!object) {
     return { content: null, etag: null };
   }
   const content = await object.text();
   return { content, etag: object.etag ?? null };
-};
+}
 
-const getPostBySlug = async (db: D1Database, slug: string) =>
-  await db
+async function getPostBySlug(db: D1Database, slug: string) {
+  return await db
     .prepare(
       `SELECT id, slug, title, excerpt, status,
           published_at AS publishedAt, updated_at AS updatedAt,
@@ -81,9 +81,10 @@ const getPostBySlug = async (db: D1Database, slug: string) =>
     )
     .bind(slug)
     .first<PostRecord>();
+}
 
-const getPublishedPostBySlug = async (db: D1Database, slug: string) =>
-  await db
+async function getPublishedPostBySlug(db: D1Database, slug: string) {
+  return await db
     .prepare(
       `SELECT id, slug, title, excerpt, status,
           published_at AS publishedAt, updated_at AS updatedAt,
@@ -95,8 +96,9 @@ const getPublishedPostBySlug = async (db: D1Database, slug: string) =>
     )
     .bind(slug)
     .first<PostRecord>();
+}
 
-export const listPublishedPosts = async (db: D1Database) => {
+export async function listPublishedPosts(db: D1Database) {
   const result = await db
     .prepare(
       `SELECT id, slug, title, excerpt, published_at AS publishedAt
@@ -106,9 +108,9 @@ export const listPublishedPosts = async (db: D1Database) => {
     )
     .all<PostSummary>();
   return result.results ?? [];
-};
+}
 
-export const listPosts = async (db: D1Database) => {
+export async function listPosts(db: D1Database) {
   const result = await db
     .prepare(
       `SELECT id, slug, title, excerpt, status,
@@ -120,35 +122,35 @@ export const listPosts = async (db: D1Database) => {
     )
     .all<PostRecord>();
   return result.results ?? [];
-};
+}
 
-export const getPublishedPostWithContent = async (
+export async function getPublishedPostWithContent(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<PostWithContent | null> => {
+): Promise<PostWithContent | null> {
   const post = await getPublishedPostBySlug(db, slug);
   if (!post) return null;
   const { content, etag } = await readContent(bucket, post.contentKey);
   return { post, content, etag };
-};
+}
 
-export const getPostWithContent = async (
+export async function getPostWithContent(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<PostWithContent | null> => {
+): Promise<PostWithContent | null> {
   const post = await getPostBySlug(db, slug);
   if (!post) return null;
   const { content, etag } = await readContent(bucket, post.contentKey);
   return { post, content, etag };
-};
+}
 
-export const createPost = async (
+export async function createPost(
   db: D1Database,
   bucket: R2Bucket,
   input: CreatePostInput,
-): Promise<CreatePostResult> => {
+): Promise<CreatePostResult> {
   const existing = await db
     .prepare("SELECT slug FROM posts WHERE slug = ? LIMIT 1")
     .bind(input.slug)
@@ -213,14 +215,14 @@ export const createPost = async (
       contentHash: meta.hash,
     },
   };
-};
+}
 
-export const updatePost = async (
+export async function updatePost(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
   input: UpdatePostInput,
-): Promise<UpdatePostResult> => {
+): Promise<UpdatePostResult> {
   const existing = await getPostBySlug(db, slug);
   if (!existing) {
     return { ok: false, reason: "not_found" };
@@ -285,13 +287,13 @@ export const updatePost = async (
       contentHash,
     },
   };
-};
+}
 
-export const deletePost = async (
+export async function deletePost(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<DeletePostResult> => {
+): Promise<DeletePostResult> {
   const existing = await db
     .prepare("SELECT content_key AS contentKey FROM posts WHERE slug = ? LIMIT 1")
     .bind(slug)
@@ -305,4 +307,4 @@ export const deletePost = async (
   await bucket.delete(existing.contentKey);
 
   return { ok: true };
-};
+}

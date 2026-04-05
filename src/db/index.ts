@@ -8,5 +8,10 @@ export type Bindings = {
 
 export type AppContext = Context<{ Bindings: Bindings }>;
 
-export const getDb = (c: AppContext) => c.env.DB;
-export const getPostsBucket = (c: AppContext) => c.env.POSTS_BUCKET;
+export function getDb(c: AppContext) {
+  return c.env.DB;
+}
+
+export function getPostsBucket(c: AppContext) {
+  return c.env.POSTS_BUCKET;
+}

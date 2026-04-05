@@ -1,5 +1,4 @@
 import { css } from "hono/css";
-import type { FC } from "hono/jsx";
 import type { PostRecord } from "../../../backend/repositories/post-repository";
 
 function formatDate(isoDate: string): string {
@@ -8,7 +7,7 @@ function formatDate(isoDate: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
-const PostArticle: FC<{ post: PostRecord }> = ({ post }) => {
+export function PostArticle({ post }: { post: PostRecord }) {
   const articleStyle = css`
     min-width: 0;
     h1 {
@@ -133,6 +132,4 @@ const PostArticle: FC<{ post: PostRecord }> = ({ post }) => {
       </a>
     </article>
   );
-};
-
-export { PostArticle };
+}

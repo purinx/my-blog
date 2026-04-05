@@ -1,11 +1,10 @@
 import { css } from "hono/css";
-import type { FC } from "hono/jsx";
 import type { PostRecord } from "../backend/repositories/post-repository";
 import { PostArticle } from "../features/post/components/post-article";
 import { TocSidebar } from "../features/post/components/toc-sidebar";
 import { Layout } from "../ui/layout";
 
-const PostDetail: FC<{ post: PostRecord; content: string }> = ({ post, content }) => {
+export function PostDetail({ post, content }: { post: PostRecord; content: string }) {
   const wrapperStyle = css`
     max-width: 720px;
   `;
@@ -24,6 +23,4 @@ const PostDetail: FC<{ post: PostRecord; content: string }> = ({ post, content }
       <script src="/markdown-renderer.js" defer />
     </Layout>
   );
-};
-
-export { PostDetail };
+}
