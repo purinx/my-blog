@@ -17,6 +17,7 @@
     "sqlite": "sqlite3 $(find .wrangler/state/v3/d1 -name '*.sqlite' | head -1)"
   },
   "dependencies": {
+    "effect": "^3.21.0",
     "hono": "^4.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

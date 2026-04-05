@@ -1,3 +1,5 @@
+import { Data, Effect } from "effect";
+
 const encoder = new TextEncoder();
 
 type PostBase = {
@@ -34,10 +36,6 @@ export type CreatePostInput = {
   publishedAt?: string;
 };
 
-export type CreatePostResult =
-  | { ok: true; post: PostRecord }
-  | { ok: false; reason: "slug_exists" };
-
 export type UpdatePostInput = {
   title?: string;
   excerpt?: string;
@@ -46,162 +44,181 @@ export type UpdatePostInput = {
   publishedAt?: string;
 };
 
-export type UpdatePostResult = { ok: true; post: PostRecord } | { ok: false; reason: "not_found" };
+export class PostNotFoundError extends Data.TaggedError("PostNotFoundError")<{
+  slug: string;
+}> {}
 
-export type DeletePostResult = { ok: true } | { ok: false; reason: "not_found" };
+export class SlugConflictError extends Data.TaggedError("SlugConflictError")<{
+  slug: string;
+}> {}
 
-async function computeContentMeta(content: string) {
-  const bytes = encoder.encode(content);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  const hash = Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return { length: bytes.length, hash };
+function computeContentMeta(content: string): Effect.Effect<{ length: number; hash: string }> {
+  return Effect.promise(async () => {
+    const bytes = encoder.encode(content);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const hash = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return { length: bytes.length, hash };
+  });
 }
 
-async function readContent(bucket: R2Bucket, contentKey: string) {
-  const object = await bucket.get(contentKey);
-  if (!object) {
-    return { content: null, etag: null };
-  }
-  const content = await object.text();
-  return { content, etag: object.etag ?? null };
+function readContent(
+  bucket: R2Bucket,
+  contentKey: string,
+): Effect.Effect<{ content: string | null; etag: string | null }> {
+  return Effect.promise(async () => {
+    const object = await bucket.get(contentKey);
+    if (!object) return { content: null, etag: null };
+    const content = await object.text();
+    return { content, etag: object.etag ?? null };
+  });
 }
 
-async function getPostBySlug(db: D1Database, slug: string) {
-  return await db
-    .prepare(
-      `SELECT id, slug, title, excerpt, status,
-          published_at AS publishedAt, updated_at AS updatedAt,
-          content_key AS contentKey, content_type AS contentType,
-          content_length AS contentLength, content_hash AS contentHash
-       FROM posts
-       WHERE slug = ?
-       LIMIT 1`,
-    )
-    .bind(slug)
-    .first<PostRecord>();
+function queryPostBySlug(db: D1Database, slug: string): Effect.Effect<PostRecord | null> {
+  return Effect.promise(() =>
+    db
+      .prepare(
+        `SELECT id, slug, title, excerpt, status,
+            published_at AS publishedAt, updated_at AS updatedAt,
+            content_key AS contentKey, content_type AS contentType,
+            content_length AS contentLength, content_hash AS contentHash
+         FROM posts
+         WHERE slug = ?
+         LIMIT 1`,
+      )
+      .bind(slug)
+      .first<PostRecord>()
+      .then((r) => r ?? null),
+  );
 }
 
-async function getPublishedPostBySlug(db: D1Database, slug: string) {
-  return await db
-    .prepare(
-      `SELECT id, slug, title, excerpt, status,
-          published_at AS publishedAt, updated_at AS updatedAt,
-          content_key AS contentKey, content_type AS contentType,
-          content_length AS contentLength, content_hash AS contentHash
-       FROM posts
-       WHERE slug = ? AND status = 'published'
-       LIMIT 1`,
-    )
-    .bind(slug)
-    .first<PostRecord>();
+function queryPublishedPostBySlug(db: D1Database, slug: string): Effect.Effect<PostRecord | null> {
+  return Effect.promise(() =>
+    db
+      .prepare(
+        `SELECT id, slug, title, excerpt, status,
+            published_at AS publishedAt, updated_at AS updatedAt,
+            content_key AS contentKey, content_type AS contentType,
+            content_length AS contentLength, content_hash AS contentHash
+         FROM posts
+         WHERE slug = ? AND status = 'published'
+         LIMIT 1`,
+      )
+      .bind(slug)
+      .first<PostRecord>()
+      .then((r) => r ?? null),
+  );
 }
 
-export async function listPublishedPosts(db: D1Database) {
-  const result = await db
-    .prepare(
-      `SELECT id, slug, title, excerpt, published_at AS publishedAt
-       FROM posts
-       WHERE status = 'published'
-       ORDER BY published_at DESC`,
-    )
-    .all<PostSummary>();
-  return result.results ?? [];
+export function listPublishedPosts(db: D1Database): Effect.Effect<PostSummary[]> {
+  return Effect.promise(async () => {
+    const result = await db
+      .prepare(
+        `SELECT id, slug, title, excerpt, published_at AS publishedAt
+         FROM posts
+         WHERE status = 'published'
+         ORDER BY published_at DESC`,
+      )
+      .all<PostSummary>();
+    return result.results ?? [];
+  });
 }
 
-export async function listPosts(db: D1Database) {
-  const result = await db
-    .prepare(
-      `SELECT id, slug, title, excerpt, status,
-          published_at AS publishedAt, updated_at AS updatedAt,
-          content_key AS contentKey, content_type AS contentType,
-          content_length AS contentLength, content_hash AS contentHash
-       FROM posts
-       ORDER BY published_at DESC`,
-    )
-    .all<PostRecord>();
-  return result.results ?? [];
+export function listPosts(db: D1Database): Effect.Effect<PostRecord[]> {
+  return Effect.promise(async () => {
+    const result = await db
+      .prepare(
+        `SELECT id, slug, title, excerpt, status,
+            published_at AS publishedAt, updated_at AS updatedAt,
+            content_key AS contentKey, content_type AS contentType,
+            content_length AS contentLength, content_hash AS contentHash
+         FROM posts
+         ORDER BY published_at DESC`,
+      )
+      .all<PostRecord>();
+    return result.results ?? [];
+  });
 }
 
-export async function getPublishedPostWithContent(
+export function getPublishedPostWithContent(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<PostWithContent | null> {
-  const post = await getPublishedPostBySlug(db, slug);
-  if (!post) return null;
-  const { content, etag } = await readContent(bucket, post.contentKey);
-  return { post, content, etag };
+): Effect.Effect<PostWithContent, PostNotFoundError> {
+  return Effect.gen(function* () {
+    const post = yield* queryPublishedPostBySlug(db, slug);
+    if (!post) return yield* Effect.fail(new PostNotFoundError({ slug }));
+    const { content, etag } = yield* readContent(bucket, post.contentKey);
+    return { post, content, etag };
+  });
 }
 
-export async function getPostWithContent(
+export function getPostWithContent(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<PostWithContent | null> {
-  const post = await getPostBySlug(db, slug);
-  if (!post) return null;
-  const { content, etag } = await readContent(bucket, post.contentKey);
-  return { post, content, etag };
+): Effect.Effect<PostWithContent, PostNotFoundError> {
+  return Effect.gen(function* () {
+    const post = yield* queryPostBySlug(db, slug);
+    if (!post) return yield* Effect.fail(new PostNotFoundError({ slug }));
+    const { content, etag } = yield* readContent(bucket, post.contentKey);
+    return { post, content, etag };
+  });
 }
 
-export async function createPost(
+export function createPost(
   db: D1Database,
   bucket: R2Bucket,
   input: CreatePostInput,
-): Promise<CreatePostResult> {
-  const existing = await db
-    .prepare("SELECT slug FROM posts WHERE slug = ? LIMIT 1")
-    .bind(input.slug)
-    .first<{ slug: string }>();
+): Effect.Effect<PostRecord, SlugConflictError> {
+  return Effect.gen(function* () {
+    const existing = yield* Effect.promise(() =>
+      db
+        .prepare("SELECT slug FROM posts WHERE slug = ? LIMIT 1")
+        .bind(input.slug)
+        .first<{ slug: string }>(),
+    );
 
-  if (existing) {
-    return { ok: false, reason: "slug_exists" };
-  }
+    if (existing) return yield* Effect.fail(new SlugConflictError({ slug: input.slug }));
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-  const publishedAt = input.publishedAt ?? now;
-  const status = input.status === "draft" ? "draft" : "published";
-  const contentKey = `posts/${input.slug}.md`;
-  const contentType = "text/markdown; charset=utf-8";
-  const meta = await computeContentMeta(input.content);
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const publishedAt = input.publishedAt ?? now;
+    const status = input.status === "draft" ? "draft" : "published";
+    const contentKey = `posts/${input.slug}.md`;
+    const contentType = "text/markdown; charset=utf-8";
+    const meta = yield* computeContentMeta(input.content);
 
-  await bucket.put(contentKey, input.content, {
-    httpMetadata: { contentType },
-  });
+    yield* Effect.promise(() =>
+      bucket.put(contentKey, input.content, { httpMetadata: { contentType } }),
+    );
 
-  try {
-    await db
-      .prepare(
-        `INSERT INTO posts (
-          id, slug, title, excerpt, published_at, updated_at, status,
-          content_key, content_type, content_length, content_hash
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        id,
-        input.slug,
-        input.title,
-        input.excerpt,
-        publishedAt,
-        now,
-        status,
-        contentKey,
-        contentType,
-        meta.length,
-        meta.hash,
-      )
-      .run();
-  } catch (error) {
-    await bucket.delete(contentKey);
-    throw error;
-  }
+    yield* Effect.promise(() =>
+      db
+        .prepare(
+          `INSERT INTO posts (
+            id, slug, title, excerpt, published_at, updated_at, status,
+            content_key, content_type, content_length, content_hash
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          id,
+          input.slug,
+          input.title,
+          input.excerpt,
+          publishedAt,
+          now,
+          status,
+          contentKey,
+          contentType,
+          meta.length,
+          meta.hash,
+        )
+        .run(),
+    ).pipe(Effect.tapErrorCause(() => Effect.promise(() => bucket.delete(contentKey))));
 
-  return {
-    ok: true,
-    post: {
+    return {
       id,
       slug: input.slug,
       title: input.title,
@@ -213,68 +230,67 @@ export async function createPost(
       contentType,
       contentLength: meta.length,
       contentHash: meta.hash,
-    },
-  };
+    };
+  });
 }
 
-export async function updatePost(
+export function updatePost(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
   input: UpdatePostInput,
-): Promise<UpdatePostResult> {
-  const existing = await getPostBySlug(db, slug);
-  if (!existing) {
-    return { ok: false, reason: "not_found" };
-  }
+): Effect.Effect<PostRecord, PostNotFoundError> {
+  return Effect.gen(function* () {
+    const existing = yield* queryPostBySlug(db, slug);
+    if (!existing) return yield* Effect.fail(new PostNotFoundError({ slug }));
 
-  const title = input.title ?? existing.title;
-  const excerpt = input.excerpt ?? existing.excerpt;
-  const status = input.status ?? existing.status;
-  const publishedAt = input.publishedAt ?? existing.publishedAt;
-  const now = new Date().toISOString();
+    const title = input.title ?? existing.title;
+    const excerpt = input.excerpt ?? existing.excerpt;
+    const status = input.status ?? existing.status;
+    const publishedAt = input.publishedAt ?? existing.publishedAt;
+    const now = new Date().toISOString();
 
-  let contentKey = existing.contentKey;
-  let contentType = existing.contentType;
-  let contentLength = existing.contentLength;
-  let contentHash = existing.contentHash;
+    let contentKey = existing.contentKey;
+    let contentType = existing.contentType;
+    let contentLength = existing.contentLength;
+    let contentHash = existing.contentHash;
 
-  if (input.content) {
-    contentKey = `posts/${slug}.md`;
-    contentType = "text/markdown; charset=utf-8";
-    const meta = await computeContentMeta(input.content);
-    contentLength = meta.length;
-    contentHash = meta.hash;
+    if (input.content) {
+      contentKey = `posts/${slug}.md`;
+      contentType = "text/markdown; charset=utf-8";
+      const meta = yield* computeContentMeta(input.content);
+      contentLength = meta.length;
+      contentHash = meta.hash;
 
-    await bucket.put(contentKey, input.content, {
-      httpMetadata: { contentType },
-    });
-  }
+      yield* Effect.promise(() =>
+        bucket.put(contentKey, input.content as string, { httpMetadata: { contentType } }),
+      );
+    }
 
-  await db
-    .prepare(
-      `UPDATE posts
-       SET title = ?, excerpt = ?, status = ?, published_at = ?, updated_at = ?,
-         content_key = ?, content_type = ?, content_length = ?, content_hash = ?
-       WHERE slug = ?`,
-    )
-    .bind(
-      title,
-      excerpt,
-      status,
-      publishedAt,
-      now,
-      contentKey,
-      contentType,
-      contentLength,
-      contentHash,
-      slug,
-    )
-    .run();
+    yield* Effect.promise(() =>
+      db
+        .prepare(
+          `UPDATE posts
+           SET title = ?, excerpt = ?, status = ?, published_at = ?, updated_at = ?,
+             content_key = ?, content_type = ?, content_length = ?, content_hash = ?
+           WHERE slug = ?`,
+        )
+        .bind(
+          title,
+          excerpt,
+          status,
+          publishedAt,
+          now,
+          contentKey,
+          contentType,
+          contentLength,
+          contentHash,
+          slug,
+        )
+        .run(),
+    );
 
-  return {
-    ok: true,
-    post: {
+    return {
       ...existing,
       title,
       excerpt,
@@ -285,26 +301,26 @@ export async function updatePost(
       contentType,
       contentLength,
       contentHash,
-    },
-  };
+    };
+  });
 }
 
-export async function deletePost(
+export function deletePost(
   db: D1Database,
   bucket: R2Bucket,
   slug: string,
-): Promise<DeletePostResult> {
-  const existing = await db
-    .prepare("SELECT content_key AS contentKey FROM posts WHERE slug = ? LIMIT 1")
-    .bind(slug)
-    .first<{ contentKey: string }>();
+): Effect.Effect<void, PostNotFoundError> {
+  return Effect.gen(function* () {
+    const existing = yield* Effect.promise(() =>
+      db
+        .prepare("SELECT content_key AS contentKey FROM posts WHERE slug = ? LIMIT 1")
+        .bind(slug)
+        .first<{ contentKey: string }>(),
+    );
 
-  if (!existing) {
-    return { ok: false, reason: "not_found" };
-  }
+    if (!existing) return yield* Effect.fail(new PostNotFoundError({ slug }));
 
-  await db.prepare("DELETE FROM posts WHERE slug = ?").bind(slug).run();
-  await bucket.delete(existing.contentKey);
-
-  return { ok: true };
+    yield* Effect.promise(() => db.prepare("DELETE FROM posts WHERE slug = ?").bind(slug).run());
+    yield* Effect.promise(() => bucket.delete(existing.contentKey));
+  });
 }

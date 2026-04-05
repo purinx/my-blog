@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { Hono } from "hono";
 import * as v from "valibot";
 import type { Bindings } from "../../db";
@@ -32,34 +33,37 @@ const UpdatePostSchema = v.object({
 
 const postsController = new Hono<{ Bindings: Bindings }>();
 
-postsController.get("/", async (c) => {
-  try {
-    const posts = await listPosts(getDb(c));
-    return c.json({ posts });
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to fetch posts" }, 500);
-  }
-});
+postsController.get("/", (c) =>
+  Effect.runPromise(
+    listPosts(getDb(c)).pipe(
+      Effect.map((posts) => c.json({ posts })),
+      Effect.catchAllCause((cause) => {
+        console.error(cause);
+        return Effect.succeed(c.json({ error: "Failed to fetch posts" }, 500));
+      }),
+    ),
+  ),
+);
 
-postsController.get("/:slug", async (c) => {
+postsController.get("/:slug", (c) => {
   const slug = c.req.param("slug");
-  try {
-    const result = await getPostWithContent(getDb(c), getPostsBucket(c), slug);
-
-    if (!result) {
-      return c.json({ error: "Post not found" }, 404);
-    }
-
-    if (!result.content) {
-      return c.json({ error: "Post content missing" }, 404);
-    }
-
-    return c.json({ post: { ...result.post, content: result.content } });
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to fetch post" }, 500);
-  }
+  return Effect.runPromise(
+    getPostWithContent(getDb(c), getPostsBucket(c), slug).pipe(
+      Effect.map((result) => {
+        if (!result.content) {
+          return c.json({ error: "Post content missing" }, 404);
+        }
+        return c.json({ post: { ...result.post, content: result.content } });
+      }),
+      Effect.catchTag("PostNotFoundError", () =>
+        Effect.succeed(c.json({ error: "Post not found" }, 404)),
+      ),
+      Effect.catchAllCause((cause) => {
+        console.error(cause);
+        return Effect.succeed(c.json({ error: "Failed to fetch post" }, 500));
+      }),
+    ),
+  );
 });
 
 postsController.post("/", async (c) => {
@@ -71,25 +75,25 @@ postsController.post("/", async (c) => {
 
   const { slug, title, excerpt, content, status, publishedAt } = parsed.output;
 
-  try {
-    const result = await createPost(getDb(c), getPostsBucket(c), {
+  return Effect.runPromise(
+    createPost(getDb(c), getPostsBucket(c), {
       slug,
       title,
       excerpt,
       content,
       status,
       publishedAt,
-    });
-
-    if (!result.ok) {
-      return c.json({ error: "Slug already exists" }, 409);
-    }
-
-    return c.json({ post: result.post }, 201);
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to create post" }, 500);
-  }
+    }).pipe(
+      Effect.map((post) => c.json({ post }, 201)),
+      Effect.catchTag("SlugConflictError", () =>
+        Effect.succeed(c.json({ error: "Slug already exists" }, 409)),
+      ),
+      Effect.catchAllCause((cause) => {
+        console.error(cause);
+        return Effect.succeed(c.json({ error: "Failed to create post" }, 500));
+      }),
+    ),
+  );
 });
 
 postsController.put("/:slug", async (c) => {
@@ -100,33 +104,34 @@ postsController.put("/:slug", async (c) => {
     return c.json({ error: "Invalid request body", issues: parsed.issues }, 400);
   }
 
-  try {
-    const result = await updatePost(getDb(c), getPostsBucket(c), slug, parsed.output);
-
-    if (!result.ok) {
-      return c.json({ error: "Post not found" }, 404);
-    }
-
-    return c.json({ post: result.post });
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to update post" }, 500);
-  }
+  return Effect.runPromise(
+    updatePost(getDb(c), getPostsBucket(c), slug, parsed.output).pipe(
+      Effect.map((post) => c.json({ post })),
+      Effect.catchTag("PostNotFoundError", () =>
+        Effect.succeed(c.json({ error: "Post not found" }, 404)),
+      ),
+      Effect.catchAllCause((cause) => {
+        console.error(cause);
+        return Effect.succeed(c.json({ error: "Failed to update post" }, 500));
+      }),
+    ),
+  );
 });
 
-postsController.delete("/:slug", async (c) => {
+postsController.delete("/:slug", (c) => {
   const slug = c.req.param("slug");
-  try {
-    const result = await deletePost(getDb(c), getPostsBucket(c), slug);
-    if (!result.ok) {
-      return c.json({ error: "Post not found" }, 404);
-    }
-
-    return c.json({ deleted: true });
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to delete post" }, 500);
-  }
+  return Effect.runPromise(
+    deletePost(getDb(c), getPostsBucket(c), slug).pipe(
+      Effect.map(() => c.json({ deleted: true })),
+      Effect.catchTag("PostNotFoundError", () =>
+        Effect.succeed(c.json({ error: "Post not found" }, 404)),
+      ),
+      Effect.catchAllCause((cause) => {
+        console.error(cause);
+        return Effect.succeed(c.json({ error: "Failed to delete post" }, 500));
+      }),
+    ),
+  );
 });
 
 export { postsController };
