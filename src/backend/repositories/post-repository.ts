@@ -1,38 +1,23 @@
-import { Data, Effect } from "effect";
+import { Effect } from "effect";
+import {
+  Post,
+  PostNotFoundError,
+  PostSummary,
+  SlugConflictError,
+  type PostStatus,
+  type PostWithContent,
+} from "../domain/post";
+
+export type { Post, PostSummary, PostWithContent, PostNotFoundError, SlugConflictError };
 
 const encoder = new TextEncoder();
-
-type PostBase = {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  publishedAt: string;
-};
-
-export type PostSummary = PostBase;
-
-export type PostRecord = PostBase & {
-  updatedAt: string;
-  status: string;
-  contentKey: string;
-  contentType: string;
-  contentLength: number | null;
-  contentHash: string | null;
-};
-
-export type PostWithContent = {
-  post: PostRecord;
-  content: string | null;
-  etag: string | null;
-};
 
 export type CreatePostInput = {
   slug: string;
   title: string;
   excerpt: string;
   content: string;
-  status?: "draft" | "published";
+  status?: PostStatus;
   publishedAt?: string;
 };
 
@@ -40,17 +25,38 @@ export type UpdatePostInput = {
   title?: string;
   excerpt?: string;
   content?: string;
-  status?: "draft" | "published";
+  status?: PostStatus;
   publishedAt?: string;
 };
 
-export class PostNotFoundError extends Data.TaggedError("PostNotFoundError")<{
+type RawPost = {
+  id: string;
   slug: string;
-}> {}
+  title: string;
+  excerpt: string;
+  status: string;
+  publishedAt: string;
+  updatedAt: string;
+  contentKey: string;
+  contentType: string;
+  contentLength: number | null;
+  contentHash: string | null;
+};
 
-export class SlugConflictError extends Data.TaggedError("SlugConflictError")<{
+type RawPostSummary = {
+  id: string;
   slug: string;
-}> {}
+  title: string;
+  excerpt: string;
+  publishedAt: string;
+};
+
+function toPost(raw: RawPost): Post {
+  return new Post({
+    ...raw,
+    status: raw.status === "draft" ? "draft" : "published",
+  });
+}
 
 function computeContentMeta(content: string): Effect.Effect<{ length: number; hash: string }> {
   return Effect.promise(async () => {
@@ -75,7 +81,7 @@ function readContent(
   });
 }
 
-function queryPostBySlug(db: D1Database, slug: string): Effect.Effect<PostRecord | null> {
+function queryPostBySlug(db: D1Database, slug: string): Effect.Effect<Post | null> {
   return Effect.promise(() =>
     db
       .prepare(
@@ -88,12 +94,12 @@ function queryPostBySlug(db: D1Database, slug: string): Effect.Effect<PostRecord
          LIMIT 1`,
       )
       .bind(slug)
-      .first<PostRecord>()
-      .then((r) => r ?? null),
+      .first<RawPost>()
+      .then((r) => (r ? toPost(r) : null)),
   );
 }
 
-function queryPublishedPostBySlug(db: D1Database, slug: string): Effect.Effect<PostRecord | null> {
+function queryPublishedPostBySlug(db: D1Database, slug: string): Effect.Effect<Post | null> {
   return Effect.promise(() =>
     db
       .prepare(
@@ -106,8 +112,8 @@ function queryPublishedPostBySlug(db: D1Database, slug: string): Effect.Effect<P
          LIMIT 1`,
       )
       .bind(slug)
-      .first<PostRecord>()
-      .then((r) => r ?? null),
+      .first<RawPost>()
+      .then((r) => (r ? toPost(r) : null)),
   );
 }
 
@@ -120,12 +126,12 @@ export function listPublishedPosts(db: D1Database): Effect.Effect<PostSummary[]>
          WHERE status = 'published'
          ORDER BY published_at DESC`,
       )
-      .all<PostSummary>();
-    return result.results ?? [];
+      .all<RawPostSummary>();
+    return (result.results ?? []).map((r) => new PostSummary(r));
   });
 }
 
-export function listPosts(db: D1Database): Effect.Effect<PostRecord[]> {
+export function listPosts(db: D1Database): Effect.Effect<Post[]> {
   return Effect.promise(async () => {
     const result = await db
       .prepare(
@@ -136,8 +142,8 @@ export function listPosts(db: D1Database): Effect.Effect<PostRecord[]> {
          FROM posts
          ORDER BY published_at DESC`,
       )
-      .all<PostRecord>();
-    return result.results ?? [];
+      .all<RawPost>();
+    return (result.results ?? []).map(toPost);
   });
 }
 
@@ -171,7 +177,7 @@ export function createPost(
   db: D1Database,
   bucket: R2Bucket,
   input: CreatePostInput,
-): Effect.Effect<PostRecord, SlugConflictError> {
+): Effect.Effect<Post, SlugConflictError> {
   return Effect.gen(function* () {
     const existing = yield* Effect.promise(() =>
       db
@@ -185,7 +191,7 @@ export function createPost(
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const publishedAt = input.publishedAt ?? now;
-    const status = input.status === "draft" ? "draft" : "published";
+    const status: PostStatus = input.status === "draft" ? "draft" : "published";
     const contentKey = `posts/${input.slug}.md`;
     const contentType = "text/markdown; charset=utf-8";
     const meta = yield* computeContentMeta(input.content);
@@ -218,7 +224,7 @@ export function createPost(
         .run(),
     ).pipe(Effect.tapErrorCause(() => Effect.promise(() => bucket.delete(contentKey))));
 
-    return {
+    return new Post({
       id,
       slug: input.slug,
       title: input.title,
@@ -230,7 +236,7 @@ export function createPost(
       contentType,
       contentLength: meta.length,
       contentHash: meta.hash,
-    };
+    });
   });
 }
 
@@ -239,14 +245,14 @@ export function updatePost(
   bucket: R2Bucket,
   slug: string,
   input: UpdatePostInput,
-): Effect.Effect<PostRecord, PostNotFoundError> {
+): Effect.Effect<Post, PostNotFoundError> {
   return Effect.gen(function* () {
     const existing = yield* queryPostBySlug(db, slug);
     if (!existing) return yield* Effect.fail(new PostNotFoundError({ slug }));
 
     const title = input.title ?? existing.title;
     const excerpt = input.excerpt ?? existing.excerpt;
-    const status = input.status ?? existing.status;
+    const status: PostStatus = input.status ?? existing.status;
     const publishedAt = input.publishedAt ?? existing.publishedAt;
     const now = new Date().toISOString();
 
@@ -290,7 +296,7 @@ export function updatePost(
         .run(),
     );
 
-    return {
+    return new Post({
       ...existing,
       title,
       excerpt,
@@ -301,7 +307,7 @@ export function updatePost(
       contentType,
       contentLength,
       contentHash,
-    };
+    });
   });
 }
 
