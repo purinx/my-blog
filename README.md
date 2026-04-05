@@ -6,8 +6,10 @@ Minimal blog app built with Hono and React, rendered on the edge and deployed vi
 
 - Hono (HTTP framework + JSX SSR)
 - React 18 (JSX UI)
-- Vite+ (unified toolchain: build, dev, lint, format via `vp` CLI)
+- Vite (build/dev)
 - Cloudflare Pages/Workers (deployment target via Wrangler)
+- Prettier (format)
+- Oxlint (lint)
 - TypeScript
 - pnpm (package manager)
 
@@ -37,22 +39,25 @@ pnpm install
 ### Development
 
 ```bash
-pnpm dev   # vp dev
+pnpm dev
 ```
 
 ### Build
 
 ```bash
-pnpm build   # vp build
+pnpm build
 ```
 
 ### Lint / Format / Check
 
 ```bash
-pnpm lint        # vp lint (Oxlint)
-pnpm format      # vp fmt (Oxfmt)
-pnpm check       # vp check (lint + format together)
-pnpm check:fix   # vp check --fix (auto-fix)
+pnpm lint           # oxlint
+pnpm lint:fix       # oxlint --fix
+pnpm format         # prettier --write
+pnpm format:check   # prettier --check
+pnpm check:type     # tsc --noEmit
+pnpm check          # type + lint + format check
+pnpm check:fix      # type + lint fix + format
 ```
 
 ### Preview (Cloudflare Pages runtime)

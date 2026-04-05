@@ -20,9 +20,7 @@ app.use("/api/*", async (c, next) => {
   return next();
 });
 
-const routes = app.route("/api/posts", postsController);
-
-export type AppType = typeof routes;
+app.route("/api/posts", postsController);
 
 // ホームページ
 app.get("/", (c) => {
@@ -64,6 +62,7 @@ app.get("/posts/:slug", (c) => {
   return Effect.runPromise(
     getPublishedPostWithContent(getDb(c), slug).pipe(
       Effect.map((result) => {
+        console.log(result);
         if (result.etag) {
           c.header("ETag", result.etag);
         } else if (result.post.contentHash) {

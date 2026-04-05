@@ -9,10 +9,13 @@ pnpm dev          # local dev server (Hono + Vite)
 pnpm build        # production build to ./dist
 pnpm preview      # serve dist with wrangler pages dev
 pnpm deploy       # deploy via wrangler
-pnpm lint         # lint
-pnpm format       # format
-pnpm check        # type-check
-pnpm check:fix    # type-check with auto-fix
+pnpm lint         # lint (oxlint)
+pnpm lint:fix     # lint with auto-fix
+pnpm format       # format (prettier --write)
+pnpm format:check # prettier --check
+pnpm check:type   # type-check
+pnpm check        # type + lint + format-check
+pnpm check:fix    # type + lint-fix + format
 pnpm sqlite       # open local D1 sqlite DB (wrangler local state)
 ```
 
@@ -36,7 +39,7 @@ This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 
 - `wrangler.toml` configures Cloudflare Pages with D1 binding `DB`.
 - DB migrations are in `migrations/` and applied via wrangler (`database_id` in wrangler.toml is a placeholder for local dev).
-- `vite-plus` wraps Vite; `@hono/vite-cloudflare-pages` and `@hono/vite-dev-server` handle local dev and bundling.
+- Vite + `@hono/vite-cloudflare-pages` + `@hono/vite-dev-server` handle local dev and bundling.
 
 ## Coding Guideline
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "hono/jsx";
-import { render } from "hono/jsx/dom";
+import { useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
 import ReactMarkdown from "react-markdown";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
@@ -91,6 +91,6 @@ const contentEl = document.getElementById("post-content");
 
 if (rawEl && contentEl) {
   const content: string = JSON.parse(rawEl.textContent ?? '""');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  render((<App content={content} />) as any, contentEl);
+  const root = createRoot(contentEl);
+  root.render(<App content={content} />);
 }
