@@ -1,5 +1,5 @@
 import { css } from "hono/css";
-import type { PostSummary } from "../../../backend/repositories/post-repository";
+import type { PostSummary } from "../../../backend/domain/post";
 
 export function PostCard({ post }: { post: PostSummary }) {
   const cardStyle = css`

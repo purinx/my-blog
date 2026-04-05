@@ -1,5 +1,5 @@
 import { css } from "hono/css";
-import type { PostRecord } from "../../../backend/repositories/post-repository";
+import type { Post } from "../../../backend/domain/post";
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);
@@ -7,7 +7,7 @@ function formatDate(isoDate: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
-export function PostArticle({ post }: { post: PostRecord }) {
+export function PostArticle({ post }: { post: Post }) {
   const articleStyle = css`
     min-width: 0;
     h1 {
