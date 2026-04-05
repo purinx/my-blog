@@ -20,7 +20,7 @@ export function PostDetail({ post, content }: { post: Post; content: string }) {
         id="markdown-raw"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(content) }}
       />
-      <script src="/markdown-renderer.js" defer />
+      <script src="/client/markdown-renderer.js" defer />
     </Layout>
   );
 }

@@ -27,9 +27,6 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@18.3.28)(react@18.3.1)
@@ -70,9 +67,6 @@ importers:
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.28)
       esbuild:
         specifier: ^0.27.4
         version: 0.27.4
@@ -942,11 +936,6 @@ packages:
   '@types/prop-types@15.7.15':
     resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
 
-  '@types/react-dom@18.3.7':
-    resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
-    peerDependencies:
-      '@types/react': ^18.0.0
-
   '@types/react@18.3.28':
     resolution: {integrity: sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==}
 
@@ -1558,11 +1547,6 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
-  react-dom@18.3.1:
-    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
-    peerDependencies:
-      react: ^18.3.1
-
   react-markdown@10.1.0:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
@@ -1590,9 +1574,6 @@ packages:
 
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
-
-  scheduler@0.23.2:
-    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
 
   semver@7.7.4:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
@@ -2266,10 +2247,6 @@ snapshots:
   '@types/ms@2.1.0': {}
 
   '@types/prop-types@15.7.15': {}
-
-  '@types/react-dom@18.3.7(@types/react@18.3.28)':
-    dependencies:
-      '@types/react': 18.3.28
 
   '@types/react@18.3.28':
     dependencies:
@@ -3082,12 +3059,6 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
-  react-dom@18.3.1(react@18.3.1):
-    dependencies:
-      loose-envify: 1.4.0
-      react: 18.3.1
-      scheduler: 0.23.2
-
   react-markdown@10.1.0(@types/react@18.3.28)(react@18.3.1):
     dependencies:
       '@types/hast': 3.0.4
@@ -3157,10 +3128,6 @@ snapshots:
       '@types/mdast': 4.0.4
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
-
-  scheduler@0.23.2:
-    dependencies:
-      loose-envify: 1.4.0
 
   semver@7.7.4: {}
 
