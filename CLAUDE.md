@@ -43,33 +43,45 @@ This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 
 ### General
 
-- ファイル名はkebab-caseで記載すること
-- 各モジュールを実装した際は、単体テストも実装することテストも実装すること
+- File names must use kebab-case
+- Each module must have accompanying unit tests
+- Declare functions using the `function` syntax; do not use arrow functions
+  - Do not use `this`
+- Use `type` declarations for type definitions
+  - Keep types DRY by using `Omit` and `Pick` where applicable
+- Prefer `named export`s
+  - Avoid `default export` unless required by the framework
 
 ### Frontend
 
-- なるべくコンポーネントの責務は細かく分けるように、
-  - src/ui
-    - ui コンポーネント
-  - src/features/
-    - 単一の機能ごとのパッケージング。配下にさらにディレクトリを掘って良い
-    - eg. components/ hooks/ 
-  - src/components/
-    - src/index.tsx から直接参照するコンテナーコンポーネント  
+- Keep component responsibilities small and focused:
+  - `src/ui` — UI primitive components
+  - `src/features/` — Feature-scoped packages; subdirectories allowed
+    - e.g. `components/`, `hooks/`
+  - `src/components/` — Container components referenced directly from `src/index.tsx`
 
 ### Backend
 
 ```
-- backend
-  - repositories
-  - controllers
-  - utils
+backend/
+  controllers/
+  repositories/
+  domain/
+    [model]/
+      index.ts   # model class declaration
+      ...        # value objects
+  utils/
 ```
 
-- Repository 
-  - DBとの処理はトランザクションレベルでrepositoryに切り出すこと
-- Controller
-  - 各 REST Resource毎にcontrollerに切り出すこと
-- Utils
-  - 共通のユーティリティーは utils に切り出すこと
+- **Controller** — Extract one controller per REST resource; validate requests with Valibot ([docs](https://valibot.dev/api/))
+- **Repository** — Encapsulate all DB access at the transaction level in repositories
+- **Utils** — Extract shared utilities into `utils/`
+- **Async / error handling** — Use Effect for all async operations and error handling in the backend ([docs](https://effect.website/docs))
+- Prefer Hono's built-in SSR (pass props directly) over REST API calls where possible
 
+### Domain
+
+- Define data structures that reflect the domain model
+- May be used from either frontend or backend
+- Define using Effect's `Data.Class`
+- Value Objects should also be defined as `Data.Class`
