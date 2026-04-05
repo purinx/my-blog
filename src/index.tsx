@@ -1,13 +1,11 @@
 import { Effect } from "effect";
 import { Hono } from "hono";
 import { css } from "hono/css";
-import { postsController } from "./backend/controllers/posts-controller";
-import {
-  getPublishedPostWithContent,
-  listPublishedPosts,
-} from "./backend/repositories/post-repository";
+import { getPostPage, postsController } from "./backend/controllers/posts-controller";
+import { listPublishedPosts } from "./backend/repositories/post-repository";
+import { logServerError } from "./backend/utils/error-log";
 import { requireApiKey } from "./backend/utils/auth";
-import { PostDetail } from "./components/post-detail";
+import { ErrorPage } from "./components/Error";
 import { PostCard } from "./features/posts/components/post-card";
 import { type AppContext, type Bindings, getDb } from "./db";
 import { Layout } from "./ui/layout";
@@ -41,13 +39,20 @@ app.get("/", (c) => {
         );
       }),
       Effect.catchAllCause((cause) => {
-        console.error(cause);
+        const errorId = logServerError({
+          route: c.req.path,
+          method: c.req.method,
+          statusCode: 500,
+          cause,
+        });
         return Effect.succeed(
           c.html(
-            <Layout>
-              <h1>500 - Internal Server Error</h1>
-              <p>記事の取得に失敗しました。</p>
-            </Layout>,
+            <ErrorPage
+              statusCode={500}
+              description="記事の取得に失敗しました。"
+              errorId={errorId}
+              showHomeLink
+            />,
             500,
           ),
         );
@@ -56,50 +61,17 @@ app.get("/", (c) => {
   );
 });
 
-// 記事ページ
-app.get("/posts/:slug", (c) => {
-  const slug = c.req.param("slug");
-  return Effect.runPromise(
-    getPublishedPostWithContent(getDb(c), slug).pipe(
-      Effect.map((result) => {
-        console.log(result);
-        if (result.etag) {
-          c.header("ETag", result.etag);
-        } else if (result.post.contentHash) {
-          c.header("ETag", result.post.contentHash);
-        }
-        c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-        return c.html(<PostDetail post={result.post} content={result.content} />);
-      }),
-      Effect.catchTag("PostNotFoundError", () =>
-        Effect.succeed(
-          c.html(
-            <Layout>
-              <h1>404 - Post Not Found</h1>
-              <p>
-                <a href="/">ホームに戻る</a>
-              </p>
-            </Layout>,
-            404,
-          ),
-        ),
-      ),
-      Effect.catchAllCause((cause) => {
-        console.error(cause);
-        return Effect.succeed(
-          c.html(
-            <Layout>
-              <h1>500 - Internal Server Error</h1>
-              <p>記事の取得に失敗しました。</p>
-            </Layout>,
-            500,
-          ),
-        );
-      }),
-    ),
-  );
-});
+app.get("/posts/:slug", getPostPage);
 
-app.all("*", (c) => c.notFound());
+app.notFound((c) =>
+  c.html(
+    <ErrorPage
+      statusCode={404}
+      description="ページが見つかりませんでした。"
+      showHomeLink
+    />,
+    404,
+  ),
+);
 
 export default app;
