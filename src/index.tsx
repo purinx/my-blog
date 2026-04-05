@@ -1,15 +1,15 @@
 import { Hono } from "hono";
 import { css } from "hono/css";
-import postsController from "./backend/controllers/posts-controller";
+import { postsController } from "./backend/controllers/posts-controller";
 import {
   getPublishedPostWithContent,
   listPublishedPosts,
 } from "./backend/repositories/post-repository";
 import { requireApiKey } from "./backend/utils/auth";
-import PostDetail from "./components/post-detail";
-import PostCard from "./features/posts/components/post-card";
+import { PostDetail } from "./components/post-detail";
+import { PostCard } from "./features/posts/components/post-card";
 import { type AppContext, type Bindings, getDb, getPostsBucket } from "./db";
-import Layout from "./ui/layout";
+import { Layout } from "./ui/layout";
 
 const app = new Hono<{ Bindings: Bindings }>();
 

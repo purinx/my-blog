@@ -135,4 +135,4 @@ const PostArticle: FC<{ post: PostRecord }> = ({ post }) => {
   );
 };
 
-export default PostArticle;
+export { PostArticle };

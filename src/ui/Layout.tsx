@@ -68,4 +68,4 @@ const Layout: FC<PropsWithChildren<{ wide?: boolean }>> = ({ children, wide }) =
   );
 };
 
-export default Layout;
+export { Layout };

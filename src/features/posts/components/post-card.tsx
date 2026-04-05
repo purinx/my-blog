@@ -33,4 +33,4 @@ const PostCard: FC<{ post: PostSummary }> = ({ post }) => {
   );
 };
 
-export default PostCard;
+export { PostCard };

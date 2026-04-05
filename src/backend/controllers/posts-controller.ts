@@ -132,4 +132,4 @@ postsController.delete("/:slug", async (c) => {
   }
 });
 
-export default postsController;
+export { postsController };

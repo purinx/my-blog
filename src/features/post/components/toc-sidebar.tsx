@@ -43,4 +43,4 @@ const TocSidebar: FC = () => {
   );
 };
 
-export default TocSidebar;
+export { TocSidebar };
