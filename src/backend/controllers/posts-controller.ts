@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import * as v from "valibot";
 import type { Bindings } from "../../db";
 import { getDb, getPostsBucket } from "../../db";
 import {
@@ -8,7 +9,26 @@ import {
   listPosts,
   updatePost,
 } from "../repositories/post-repository";
-import { asRecord, isNonEmptyString } from "../utils/validation";
+
+const NonEmptyString = v.pipe(v.string(), v.minLength(1));
+const PostStatus = v.picklist(["draft", "published"]);
+
+const CreatePostSchema = v.object({
+  slug: NonEmptyString,
+  title: NonEmptyString,
+  excerpt: NonEmptyString,
+  content: NonEmptyString,
+  status: v.optional(PostStatus),
+  publishedAt: v.optional(NonEmptyString),
+});
+
+const UpdatePostSchema = v.object({
+  title: v.optional(NonEmptyString),
+  excerpt: v.optional(NonEmptyString),
+  content: v.optional(NonEmptyString),
+  status: v.optional(PostStatus),
+  publishedAt: v.optional(NonEmptyString),
+});
 
 const postsController = new Hono<{ Bindings: Bindings }>();
 
@@ -44,21 +64,12 @@ postsController.get("/:slug", async (c) => {
 
 postsController.post("/", async (c) => {
   const body = await c.req.json().catch(() => null);
-  const data = asRecord(body);
-  if (!data) {
-    return c.json({ error: "Invalid JSON body" }, 400);
+  const parsed = v.safeParse(CreatePostSchema, body);
+  if (!parsed.success) {
+    return c.json({ error: "Invalid request body", issues: parsed.issues }, 400);
   }
 
-  const { slug, title, excerpt, content, status, publishedAt } = data;
-
-  if (
-    !isNonEmptyString(slug) ||
-    !isNonEmptyString(title) ||
-    !isNonEmptyString(excerpt) ||
-    !isNonEmptyString(content)
-  ) {
-    return c.json({ error: "slug, title, excerpt, content are required" }, 400);
-  }
+  const { slug, title, excerpt, content, status, publishedAt } = parsed.output;
 
   try {
     const result = await createPost(getDb(c), getPostsBucket(c), {
@@ -66,8 +77,8 @@ postsController.post("/", async (c) => {
       title,
       excerpt,
       content,
-      status: status === "draft" || status === "published" ? status : undefined,
-      publishedAt: isNonEmptyString(publishedAt) ? publishedAt : undefined,
+      status,
+      publishedAt,
     });
 
     if (!result.ok) {
@@ -84,27 +95,13 @@ postsController.post("/", async (c) => {
 postsController.put("/:slug", async (c) => {
   const slug = c.req.param("slug");
   const body = await c.req.json().catch(() => null);
-  const data = asRecord(body);
-  if (!data) {
-    return c.json({ error: "Invalid JSON body" }, 400);
+  const parsed = v.safeParse(UpdatePostSchema, body);
+  if (!parsed.success) {
+    return c.json({ error: "Invalid request body", issues: parsed.issues }, 400);
   }
 
   try {
-    const input: {
-      title?: string;
-      excerpt?: string;
-      content?: string;
-      status?: "draft" | "published";
-      publishedAt?: string;
-    } = {};
-
-    if (isNonEmptyString(data.title)) input.title = data.title;
-    if (isNonEmptyString(data.excerpt)) input.excerpt = data.excerpt;
-    if (isNonEmptyString(data.content)) input.content = data.content;
-    if (data.status === "draft" || data.status === "published") input.status = data.status;
-    if (isNonEmptyString(data.publishedAt)) input.publishedAt = data.publishedAt;
-
-    const result = await updatePost(getDb(c), getPostsBucket(c), slug, input);
+    const result = await updatePost(getDb(c), getPostsBucket(c), slug, parsed.output);
 
     if (!result.ok) {
       return c.json({ error: "Post not found" }, 404);
