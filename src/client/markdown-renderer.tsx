@@ -92,5 +92,5 @@ const contentEl = document.getElementById("post-content");
 if (rawEl && contentEl) {
   const content: string = JSON.parse(rawEl.textContent ?? '""');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  render(<App content={content} /> as any, contentEl);
+  render((<App content={content} />) as any, contentEl);
 }

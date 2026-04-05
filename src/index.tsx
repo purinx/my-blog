@@ -9,7 +9,7 @@ import {
 import { requireApiKey } from "./backend/utils/auth";
 import { PostDetail } from "./components/post-detail";
 import { PostCard } from "./features/posts/components/post-card";
-import { type AppContext, type Bindings, getDb, getPostsBucket } from "./db";
+import { type AppContext, type Bindings, getDb } from "./db";
 import { Layout } from "./ui/layout";
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -17,10 +17,12 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use("/api/*", async (c, next) => {
   const unauthorized = requireApiKey(c as AppContext);
   if (unauthorized) return unauthorized;
-  await next();
+  return next();
 });
 
-app.route("/api/posts", postsController);
+const routes = app.route("/api/posts", postsController);
+
+export type AppType = typeof routes;
 
 // ホームページ
 app.get("/", (c) => {
@@ -60,19 +62,8 @@ app.get("/", (c) => {
 app.get("/posts/:slug", (c) => {
   const slug = c.req.param("slug");
   return Effect.runPromise(
-    getPublishedPostWithContent(getDb(c), getPostsBucket(c), slug).pipe(
+    getPublishedPostWithContent(getDb(c), slug).pipe(
       Effect.map((result) => {
-        if (!result.content) {
-          return c.html(
-            <Layout>
-              <h1>404 - Post Not Found</h1>
-              <p>
-                <a href="/">ホームに戻る</a>
-              </p>
-            </Layout>,
-            404,
-          );
-        }
         if (result.etag) {
           c.header("ETag", result.etag);
         } else if (result.post.contentHash) {
@@ -109,5 +100,7 @@ app.get("/posts/:slug", (c) => {
     ),
   );
 });
+
+app.all("*", (c) => c.notFound());
 
 export default app;

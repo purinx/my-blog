@@ -23,19 +23,18 @@ No test suite exists in this project.
 This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 
 - **`src/index.tsx`** — single entry point; defines all routes using Hono. Routes render JSX directly (no client-side React). API routes under `/api/*` are protected by Bearer/x-api-key auth.
-- **`src/db/index.ts`** — defines `Bindings` (D1 + R2 + API_KEY) and helper accessors (`getDb`, `getPostsBucket`).
-- **`src/backend/repositories/postRepository.ts`** — all D1/R2 data access. Post metadata lives in D1 (`posts` table); post content (Markdown) lives in R2 at key `posts/<slug>.md`.
+- **`src/db/index.ts`** — defines `Bindings` (D1 + API_KEY) and helper accessor (`getDb`).
+- **`src/backend/repositories/postRepository.ts`** — all D1 data access. Post metadata and post content (Markdown) are both stored in D1 (`posts` table).
 - **`src/utils/markdown.ts`** — renders Markdown to HTML via unified/remark/rehype pipeline; also extracts a TOC.
 - **`src/components/`** — Layout, PostCard, PostDetail (JSX, server-rendered only).
 
-### Storage split
+### Storage
 
-- **D1** stores post metadata (id, slug, title, excerpt, status, timestamps, content key/hash/length).
-- **R2** stores raw Markdown content, keyed as `posts/<slug>.md`. ETags from R2 are forwarded as HTTP ETags.
+- **D1** stores post metadata and raw Markdown content (`content` column). `content_hash` is used as HTTP ETag.
 
 ### Deployment
 
-- `wrangler.toml` configures Cloudflare Pages with D1 binding `DB` and R2 binding `POSTS_BUCKET`.
+- `wrangler.toml` configures Cloudflare Pages with D1 binding `DB`.
 - DB migrations are in `migrations/` and applied via wrangler (`database_id` in wrangler.toml is a placeholder for local dev).
 - `vite-plus` wraps Vite; `@hono/vite-cloudflare-pages` and `@hono/vite-dev-server` handle local dev and bundling.
 

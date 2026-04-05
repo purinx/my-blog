@@ -37,10 +37,12 @@ type RawPost = {
   status: string;
   publishedAt: string;
   updatedAt: string;
-  contentKey: string;
-  contentType: string;
   contentLength: number | null;
   contentHash: string | null;
+};
+
+type RawPostWithContent = RawPost & {
+  content: string;
 };
 
 type RawPostSummary = {
@@ -69,46 +71,15 @@ function computeContentMeta(content: string): Effect.Effect<{ length: number; ha
   });
 }
 
-function readContent(
-  bucket: R2Bucket,
-  contentKey: string,
-): Effect.Effect<{ content: string | null; etag: string | null }> {
-  return Effect.promise(async () => {
-    const object = await bucket.get(contentKey);
-    if (!object) return { content: null, etag: null };
-    const content = await object.text();
-    return { content, etag: object.etag ?? null };
-  });
-}
-
 function queryPostBySlug(db: D1Database, slug: string): Effect.Effect<Post | null> {
   return Effect.promise(() =>
     db
       .prepare(
         `SELECT id, slug, title, excerpt, status,
             published_at AS publishedAt, updated_at AS updatedAt,
-            content_key AS contentKey, content_type AS contentType,
             content_length AS contentLength, content_hash AS contentHash
          FROM posts
          WHERE slug = ?
-         LIMIT 1`,
-      )
-      .bind(slug)
-      .first<RawPost>()
-      .then((r) => (r ? toPost(r) : null)),
-  );
-}
-
-function queryPublishedPostBySlug(db: D1Database, slug: string): Effect.Effect<Post | null> {
-  return Effect.promise(() =>
-    db
-      .prepare(
-        `SELECT id, slug, title, excerpt, status,
-            published_at AS publishedAt, updated_at AS updatedAt,
-            content_key AS contentKey, content_type AS contentType,
-            content_length AS contentLength, content_hash AS contentHash
-         FROM posts
-         WHERE slug = ? AND status = 'published'
          LIMIT 1`,
       )
       .bind(slug)
@@ -131,13 +102,50 @@ export function listPublishedPosts(db: D1Database): Effect.Effect<PostSummary[]>
   });
 }
 
+function queryPostWithContentBySlug(
+  db: D1Database,
+  slug: string,
+): Effect.Effect<RawPostWithContent | null> {
+  return Effect.promise(() =>
+    db
+      .prepare(
+        `SELECT id, slug, title, excerpt, status,
+            published_at AS publishedAt, updated_at AS updatedAt,
+            content, content_length AS contentLength, content_hash AS contentHash
+         FROM posts
+         WHERE slug = ?
+         LIMIT 1`,
+      )
+      .bind(slug)
+      .first<RawPostWithContent>(),
+  );
+}
+
+function queryPublishedPostWithContentBySlug(
+  db: D1Database,
+  slug: string,
+): Effect.Effect<RawPostWithContent | null> {
+  return Effect.promise(() =>
+    db
+      .prepare(
+        `SELECT id, slug, title, excerpt, status,
+            published_at AS publishedAt, updated_at AS updatedAt,
+            content, content_length AS contentLength, content_hash AS contentHash
+         FROM posts
+         WHERE slug = ? AND status = 'published'
+         LIMIT 1`,
+      )
+      .bind(slug)
+      .first<RawPostWithContent>(),
+  );
+}
+
 export function listPosts(db: D1Database): Effect.Effect<Post[]> {
   return Effect.promise(async () => {
     const result = await db
       .prepare(
         `SELECT id, slug, title, excerpt, status,
             published_at AS publishedAt, updated_at AS updatedAt,
-            content_key AS contentKey, content_type AS contentType,
             content_length AS contentLength, content_hash AS contentHash
          FROM posts
          ORDER BY published_at DESC`,
@@ -149,33 +157,30 @@ export function listPosts(db: D1Database): Effect.Effect<Post[]> {
 
 export function getPublishedPostWithContent(
   db: D1Database,
-  bucket: R2Bucket,
   slug: string,
 ): Effect.Effect<PostWithContent, PostNotFoundError> {
   return Effect.gen(function* () {
-    const post = yield* queryPublishedPostBySlug(db, slug);
-    if (!post) return yield* Effect.fail(new PostNotFoundError({ slug }));
-    const { content, etag } = yield* readContent(bucket, post.contentKey);
-    return { post, content, etag };
+    const row = yield* queryPublishedPostWithContentBySlug(db, slug);
+    if (!row) return yield* Effect.fail(new PostNotFoundError({ slug }));
+    const { content, ...raw } = row;
+    return { post: toPost(raw), content, etag: raw.contentHash };
   });
 }
 
 export function getPostWithContent(
   db: D1Database,
-  bucket: R2Bucket,
   slug: string,
 ): Effect.Effect<PostWithContent, PostNotFoundError> {
   return Effect.gen(function* () {
-    const post = yield* queryPostBySlug(db, slug);
-    if (!post) return yield* Effect.fail(new PostNotFoundError({ slug }));
-    const { content, etag } = yield* readContent(bucket, post.contentKey);
-    return { post, content, etag };
+    const row = yield* queryPostWithContentBySlug(db, slug);
+    if (!row) return yield* Effect.fail(new PostNotFoundError({ slug }));
+    const { content, ...raw } = row;
+    return { post: toPost(raw), content, etag: raw.contentHash };
   });
 }
 
 export function createPost(
   db: D1Database,
-  bucket: R2Bucket,
   input: CreatePostInput,
 ): Effect.Effect<Post, SlugConflictError> {
   return Effect.gen(function* () {
@@ -192,21 +197,15 @@ export function createPost(
     const now = new Date().toISOString();
     const publishedAt = input.publishedAt ?? now;
     const status: PostStatus = input.status === "draft" ? "draft" : "published";
-    const contentKey = `posts/${input.slug}.md`;
-    const contentType = "text/markdown; charset=utf-8";
     const meta = yield* computeContentMeta(input.content);
-
-    yield* Effect.promise(() =>
-      bucket.put(contentKey, input.content, { httpMetadata: { contentType } }),
-    );
 
     yield* Effect.promise(() =>
       db
         .prepare(
           `INSERT INTO posts (
             id, slug, title, excerpt, published_at, updated_at, status,
-            content_key, content_type, content_length, content_hash
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            content, content_length, content_hash
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           id,
@@ -216,13 +215,12 @@ export function createPost(
           publishedAt,
           now,
           status,
-          contentKey,
-          contentType,
+          input.content,
           meta.length,
           meta.hash,
         )
         .run(),
-    ).pipe(Effect.tapErrorCause(() => Effect.promise(() => bucket.delete(contentKey))));
+    );
 
     return new Post({
       id,
@@ -232,8 +230,6 @@ export function createPost(
       status,
       publishedAt,
       updatedAt: now,
-      contentKey,
-      contentType,
       contentLength: meta.length,
       contentHash: meta.hash,
     });
@@ -242,7 +238,6 @@ export function createPost(
 
 export function updatePost(
   db: D1Database,
-  bucket: R2Bucket,
   slug: string,
   input: UpdatePostInput,
 ): Effect.Effect<Post, PostNotFoundError> {
@@ -256,21 +251,15 @@ export function updatePost(
     const publishedAt = input.publishedAt ?? existing.publishedAt;
     const now = new Date().toISOString();
 
-    let contentKey = existing.contentKey;
-    let contentType = existing.contentType;
     let contentLength = existing.contentLength;
     let contentHash = existing.contentHash;
+    let content: string | null = null;
 
-    if (input.content) {
-      contentKey = `posts/${slug}.md`;
-      contentType = "text/markdown; charset=utf-8";
+    if (input.content !== undefined) {
       const meta = yield* computeContentMeta(input.content);
       contentLength = meta.length;
       contentHash = meta.hash;
-
-      yield* Effect.promise(() =>
-        bucket.put(contentKey, input.content as string, { httpMetadata: { contentType } }),
-      );
+      content = input.content;
     }
 
     yield* Effect.promise(() =>
@@ -278,21 +267,10 @@ export function updatePost(
         .prepare(
           `UPDATE posts
            SET title = ?, excerpt = ?, status = ?, published_at = ?, updated_at = ?,
-             content_key = ?, content_type = ?, content_length = ?, content_hash = ?
+             content = COALESCE(?, content), content_length = ?, content_hash = ?
            WHERE slug = ?`,
         )
-        .bind(
-          title,
-          excerpt,
-          status,
-          publishedAt,
-          now,
-          contentKey,
-          contentType,
-          contentLength,
-          contentHash,
-          slug,
-        )
+        .bind(title, excerpt, status, publishedAt, now, content, contentLength, contentHash, slug)
         .run(),
     );
 
@@ -303,30 +281,23 @@ export function updatePost(
       status,
       publishedAt,
       updatedAt: now,
-      contentKey,
-      contentType,
       contentLength,
       contentHash,
     });
   });
 }
 
-export function deletePost(
-  db: D1Database,
-  bucket: R2Bucket,
-  slug: string,
-): Effect.Effect<void, PostNotFoundError> {
+export function deletePost(db: D1Database, slug: string): Effect.Effect<void, PostNotFoundError> {
   return Effect.gen(function* () {
     const existing = yield* Effect.promise(() =>
       db
-        .prepare("SELECT content_key AS contentKey FROM posts WHERE slug = ? LIMIT 1")
+        .prepare("SELECT slug FROM posts WHERE slug = ? LIMIT 1")
         .bind(slug)
-        .first<{ contentKey: string }>(),
+        .first<{ slug: string }>(),
     );
 
     if (!existing) return yield* Effect.fail(new PostNotFoundError({ slug }));
 
     yield* Effect.promise(() => db.prepare("DELETE FROM posts WHERE slug = ?").bind(slug).run());
-    yield* Effect.promise(() => bucket.delete(existing.contentKey));
   });
 }

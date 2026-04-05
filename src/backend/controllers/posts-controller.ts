@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { Hono } from "hono";
 import * as v from "valibot";
 import type { Bindings } from "../../db";
-import { getDb, getPostsBucket } from "../../db";
+import { getDb } from "../../db";
 import {
   createPost,
   deletePost,
@@ -48,13 +48,8 @@ postsController.get("/", (c) =>
 postsController.get("/:slug", (c) => {
   const slug = c.req.param("slug");
   return Effect.runPromise(
-    getPostWithContent(getDb(c), getPostsBucket(c), slug).pipe(
-      Effect.map((result) => {
-        if (!result.content) {
-          return c.json({ error: "Post content missing" }, 404);
-        }
-        return c.json({ post: { ...result.post, content: result.content } });
-      }),
+    getPostWithContent(getDb(c), slug).pipe(
+      Effect.map((result) => c.json({ post: { ...result.post, content: result.content } })),
       Effect.catchTag("PostNotFoundError", () =>
         Effect.succeed(c.json({ error: "Post not found" }, 404)),
       ),
@@ -76,7 +71,7 @@ postsController.post("/", async (c) => {
   const { slug, title, excerpt, content, status, publishedAt } = parsed.output;
 
   return Effect.runPromise(
-    createPost(getDb(c), getPostsBucket(c), {
+    createPost(getDb(c), {
       slug,
       title,
       excerpt,
@@ -105,7 +100,7 @@ postsController.put("/:slug", async (c) => {
   }
 
   return Effect.runPromise(
-    updatePost(getDb(c), getPostsBucket(c), slug, parsed.output).pipe(
+    updatePost(getDb(c), slug, parsed.output).pipe(
       Effect.map((post) => c.json({ post })),
       Effect.catchTag("PostNotFoundError", () =>
         Effect.succeed(c.json({ error: "Post not found" }, 404)),
@@ -121,7 +116,7 @@ postsController.put("/:slug", async (c) => {
 postsController.delete("/:slug", (c) => {
   const slug = c.req.param("slug");
   return Effect.runPromise(
-    deletePost(getDb(c), getPostsBucket(c), slug).pipe(
+    deletePost(getDb(c), slug).pipe(
       Effect.map(() => c.json({ deleted: true })),
       Effect.catchTag("PostNotFoundError", () =>
         Effect.succeed(c.json({ error: "Post not found" }, 404)),

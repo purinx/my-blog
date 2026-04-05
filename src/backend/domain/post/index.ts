@@ -18,15 +18,13 @@ export class Post extends Data.Class<{
   status: PostStatus;
   publishedAt: string;
   updatedAt: string;
-  contentKey: string;
-  contentType: string;
   contentLength: number | null;
   contentHash: string | null;
 }> {}
 
 export type PostWithContent = {
   post: Post;
-  content: string | null;
+  content: string;
   etag: string | null;
 };
 
