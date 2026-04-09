@@ -7,20 +7,12 @@ import { Layout } from "../ui/layout";
 const wrapperStyle = css`
   max-width: 720px;
 `;
-const topActionsStyle = css`
-  margin-bottom: 1rem;
-`;
 
 export function PostDetail({ post, content }: { post: Post; content: string }) {
-  
-
   return (
     <Layout wide>
-      <div class={topActionsStyle}>
-        <a href={`/posts/${post.slug}/edit`}>本文を編集</a>
-      </div>
       <div id="post-wrapper" class={wrapperStyle}>
-        <PostArticle post={post} />
+        <PostArticle post={post} editHref={`/posts/${post.slug}/edit`} />
         <TocSidebar />
       </div>
       <script

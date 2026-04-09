@@ -11,10 +11,10 @@ export function TocSidebar() {
   `;
 
   const tocCardStyle = css`
-    border: 1px solid #e8e8f0;
+    border: 1px solid var(--border-default);
     border-radius: 10px;
     padding: 1.25rem;
-    background: #fafafe;
+    background: var(--bg-surface);
   `;
 
   const tocTitleStyle = css`
@@ -22,7 +22,7 @@ export function TocSidebar() {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #888;
+    color: var(--text-muted);
     margin-bottom: 0.875rem;
   `;
 

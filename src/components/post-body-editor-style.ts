@@ -1,30 +1,39 @@
 import { css } from "hono/css";
 
 export const editorShellStyle = css`
-  --editor-sidebar-width: 240px;
+  --editor-sidebar-width: 360px;
   --editor-gap: 1rem;
   --editor-content-width: 1000px;
-  min-height: calc(100vh - 8rem);
+  position: relative;
+  margin-left: -1rem;
+  margin-top: -2rem;
+  margin-bottom: -2rem;
+  width: calc(100% + 2rem);
+  min-height: calc(100vh - 72px);
   @media (max-width: 900px) {
     --editor-sidebar-width: 0px;
+    margin-left: 0;
+    margin-top: -2rem;
+    margin-bottom: -2rem;
+    width: 100%;
   }
 `;
 
 export const sidebarStyle = css`
-  position: fixed;
+  position: absolute;
   left: 0;
-  top: 6.5rem;
+  top: 0;
   bottom: 0;
   width: var(--editor-sidebar-width);
   overflow-y: auto;
-  background: #fff;
-  border-right: 1px solid #e5e7eb;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
   padding: 0.75rem 0.75rem 1rem 1rem;
   z-index: 5;
   @media (max-width: 900px) {
     position: static;
     width: auto;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-default);
     border-right: 0;
     padding: 0 0 0.75rem;
     padding-bottom: 0.75rem;
@@ -35,7 +44,7 @@ export const sidebarStyle = css`
 
 export const editorContentFrameStyle = css`
   margin-left: calc(var(--editor-sidebar-width) + var(--editor-gap));
-  width: calc(100vw - var(--editor-sidebar-width) - var(--editor-gap) - 2rem);
+  width: calc(100% - var(--editor-sidebar-width) - var(--editor-gap));
   @media (max-width: 900px) {
     margin-left: 0;
     width: 100%;
@@ -47,10 +56,8 @@ export const editorContentStyle = css`
   margin: 0 auto;
 `;
 
-export const sidebarTitleStyle = css`
-  margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+export const sidebarNavStyle = css`
+  margin-top: 1.75rem;
 `;
 
 export const tabListStyle = css`
@@ -67,18 +74,19 @@ export const tabLinkStyle = css`
   min-width: 0;
   overflow: hidden;
   text-decoration: none;
-  color: #111827;
+  color: var(--text-primary);
   border-radius: 8px;
   padding: 0.45rem 0.6rem;
   border: 1px solid transparent;
   &[data-active="true"] {
-    background: #eef2ff;
-    border-color: #c7d2fe;
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
     font-weight: 600;
     border-radius: 0;
   }
   &:hover {
-    background: #f3f4f6;
+    background: var(--bg-surface-soft);
+    border-radius: 0;
   }
 `;
 
@@ -94,8 +102,9 @@ export const tabTitleStyle = css`
 
 export const headerRowStyle = css`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
+  padding-top: 40px;
   margin-bottom: 0.85rem;
 `;
 
@@ -124,7 +133,7 @@ export const titleInputStyle = css`
   display: block;
   border: 0;
   background: transparent;
-  color: #333;
+  color: var(--text-primary);
   font-family:
     -apple-system,
     "Hiragino Sans",
@@ -145,7 +154,7 @@ export const titleInputStyle = css`
   word-break: break-word;
   white-space: pre-wrap;
   &:focus {
-    outline: 2px solid #93c5fd;
+    outline: 2px solid var(--accent-outline);
     outline-offset: 6px;
     border-radius: 6px;
   }
@@ -164,7 +173,7 @@ export const backButtonStyle = css`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #111827;
+  color: var(--text-primary);
   text-decoration: none;
   padding: 0;
   background: transparent;
@@ -193,7 +202,7 @@ export const textareaStyle = css`
   width: 100%;
   min-height: 60vh;
   padding: 0.75rem;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   font-family:
     ui-monospace,
@@ -211,8 +220,8 @@ export const submitBaseStyle = css`
   border: 0;
   border-radius: 9999px;
   padding: 0.7rem 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--header-grad-start) 0%, var(--header-grad-end) 100%);
+  color: var(--header-text);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.18s ease;
@@ -233,7 +242,7 @@ export const submitBaseStyle = css`
     display: inline-flex;
   }
   &[data-state="saving"] {
-    background: #334155;
+    background: var(--button-saving);
     cursor: wait;
   }
 `;

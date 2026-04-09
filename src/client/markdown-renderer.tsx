@@ -19,8 +19,8 @@ function setupScrollSpy() {
   function setActive(link: HTMLAnchorElement) {
     if (activeLink) activeLink.style.cssText = "";
     activeLink = link;
-    link.style.color = "#667eea";
-    link.style.background = "#ededf8";
+    link.style.color = "var(--link-color)";
+    link.style.background = "var(--accent-soft)";
     link.style.fontWeight = "600";
   }
 
@@ -57,7 +57,7 @@ function App({ content }: { content: string }) {
       tocNavEl.innerHTML = headings
         .map((h) => {
           const level = parseInt(h.tagName[1]);
-          return `<li style="padding-left:${(level - 1) * 0.75}rem"><a href="#${h.id}" style="display:block;padding:0.3rem 0.5rem;border-radius:4px;text-decoration:none;font-size:0.835rem;line-height:1.4;color:#555;">${h.textContent}</a></li>`;
+          return `<li style="padding-left:${(level - 1) * 0.75}rem"><a href="#${h.id}" style="display:block;padding:0.3rem 0.5rem;border-radius:4px;text-decoration:none;font-size:0.835rem;line-height:1.4;color:var(--text-secondary);">${h.textContent}</a></li>`;
         })
         .join("");
     }

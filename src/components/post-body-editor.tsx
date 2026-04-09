@@ -11,8 +11,8 @@ import {
   headingGroupStyle,
   labelStyle,
   saveRowStyle,
+  sidebarNavStyle,
   sidebarStyle,
-  sidebarTitleStyle,
   submitBaseStyle,
   tabLinkStyle,
   tabListStyle,
@@ -35,8 +35,7 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
     <Layout hideFooter wide fullWidth>
       <div class={editorShellStyle}>
         <aside class={sidebarStyle}>
-          <h2 class={sidebarTitleStyle}>記事一覧</h2>
-          <nav>
+          <nav class={sidebarNavStyle}>
             <ul class={tabListStyle}>
               {posts.map(function (item) {
                 const isActive = item.slug === post.slug;
