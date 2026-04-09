@@ -8,9 +8,12 @@ export default defineConfig(function ({ mode }) {
     return {
       build: {
         rollupOptions: {
-          input: "./src/client/markdown-renderer.tsx",
+          input: {
+            "markdown-renderer": "./src/client/markdown-renderer.tsx",
+            "post-body-editor": "./src/client/post-body-editor.ts",
+          },
           output: {
-            entryFileNames: "static/client/markdown-renderer.js",
+            entryFileNames: "static/client/[name].js",
           },
         },
       },

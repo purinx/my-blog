@@ -38,7 +38,12 @@ import {
   updatePost,
 } from "../repositories/post-repository";
 import { logServerError } from "../utils/error-log";
-import { getPostPage, postsController } from "./posts-controller";
+import {
+  getPostBodyEditorPage,
+  getPostPage,
+  postsController,
+  updatePostBody,
+} from "./posts-controller";
 
 function createApp(): Hono {
   const app = new Hono();
@@ -49,6 +54,18 @@ function createApp(): Hono {
 function createPageApp(): Hono {
   const app = new Hono();
   app.get("/posts/:slug", getPostPage);
+  return app;
+}
+
+function createPostBodyEditorPageApp(): Hono {
+  const app = new Hono();
+  app.get("/posts/:slug/edit", getPostBodyEditorPage);
+  return app;
+}
+
+function createPostBodyUpdateApp(): Hono {
+  const app = new Hono();
+  app.post("/posts/:slug/edit", updatePostBody);
   return app;
 }
 
@@ -109,7 +126,10 @@ describe("postsController", function () {
     const response = await createApp().request("http://localhost/posts");
 
     expect(response.status).toBe(500);
-    expect(await parseJson(response)).toEqual({ error: "Failed to fetch posts", errorId: "deadbeef" });
+    expect(await parseJson(response)).toEqual({
+      error: "Failed to fetch posts",
+      errorId: "deadbeef",
+    });
     expect(logServerError).toHaveBeenCalledTimes(1);
   });
 
@@ -222,9 +242,7 @@ describe("postsController", function () {
   });
 
   it("POST / returns 409 on slug conflict", async function () {
-    vi.mocked(createPost).mockReturnValue(
-      Effect.fail(new SlugConflictError({ slug: "hello" })),
-    );
+    vi.mocked(createPost).mockReturnValue(Effect.fail(new SlugConflictError({ slug: "hello" })));
 
     const response = await createApp().request("http://localhost/posts", {
       method: "POST",
@@ -302,9 +320,7 @@ describe("postsController", function () {
   });
 
   it("PUT /:slug returns 404 when target is missing", async function () {
-    vi.mocked(updatePost).mockReturnValue(
-      Effect.fail(new PostNotFoundError({ slug: "missing" })),
-    );
+    vi.mocked(updatePost).mockReturnValue(Effect.fail(new PostNotFoundError({ slug: "missing" })));
 
     const response = await createApp().request("http://localhost/posts/missing", {
       method: "PUT",
@@ -332,9 +348,7 @@ describe("postsController", function () {
   });
 
   it("DELETE /:slug returns 404 when target is missing", async function () {
-    vi.mocked(deletePost).mockReturnValue(
-      Effect.fail(new PostNotFoundError({ slug: "missing" })),
-    );
+    vi.mocked(deletePost).mockReturnValue(Effect.fail(new PostNotFoundError({ slug: "missing" })));
 
     const response = await createApp().request("http://localhost/posts/missing", {
       method: "DELETE",
@@ -373,7 +387,7 @@ describe("getPostPage", function () {
     expect(response.headers.get("cache-control")).toBe(
       "public, max-age=60, stale-while-revalidate=300",
     );
-    expect(body).toContain("id=\"post-wrapper\"");
+    expect(body).toContain('id="post-wrapper"');
   });
 
   it("falls back to post.contentHash when etag is null", async function () {
@@ -423,5 +437,201 @@ describe("getPostPage", function () {
     expect(body).toContain("500 - Internal Server Error");
     expect(body).toContain("Error ID: deadbeef");
     expect(logServerError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getPostBodyEditorPage", function () {
+  it("returns rendered editor page with existing content", async function () {
+    vi.mocked(getPostWithContent).mockReturnValue(
+      Effect.succeed({
+        post: {
+          id: "post-1",
+          slug: "hello",
+          title: "Hello",
+          excerpt: "Excerpt",
+          status: "draft",
+          publishedAt: "2025-01-01T00:00:00.000Z",
+          updatedAt: "2025-01-01T00:00:00.000Z",
+          contentLength: 12,
+          contentHash: "post-hash",
+        },
+        content: "# hello",
+        etag: "etag-value",
+      }),
+    );
+
+    const response = await createPostBodyEditorPageApp().request(
+      "http://localhost/posts/hello/edit",
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain("本文を編集: Hello");
+    expect(body).toContain('id="post-body-editor-title"');
+    expect(body).toContain("タイトル編集");
+    expect(body).toContain('name="content"');
+    expect(body).toContain("# hello");
+  });
+
+  it("returns 404 when target post is not found", async function () {
+    vi.mocked(getPostWithContent).mockReturnValue(
+      Effect.fail(new PostNotFoundError({ slug: "missing" })),
+    );
+
+    const response = await createPostBodyEditorPageApp().request(
+      "http://localhost/posts/missing/edit",
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(404);
+    expect(body).toContain("404 - Not Found");
+  });
+
+  it("renders saved state when query parameter is present", async function () {
+    vi.mocked(getPostWithContent).mockReturnValue(
+      Effect.succeed({
+        post: {
+          id: "post-1",
+          slug: "hello",
+          title: "Hello",
+          excerpt: "Excerpt",
+          status: "draft",
+          publishedAt: "2025-01-01T00:00:00.000Z",
+          updatedAt: "2025-01-01T00:00:00.000Z",
+          contentLength: 12,
+          contentHash: "post-hash",
+        },
+        content: "# hello",
+        etag: "etag-value",
+      }),
+    );
+
+    const response = await createPostBodyEditorPageApp().request(
+      "http://localhost/posts/hello/edit?saved=1",
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(body).toContain('data-state="saved"');
+    expect(body).toContain("保存済み");
+  });
+});
+
+describe("updatePostBody", function () {
+  it("updates content and redirects back to edit page", async function () {
+    vi.mocked(updatePost).mockReturnValue(
+      Effect.succeed({
+        id: "post-1",
+        slug: "hello",
+        title: "Hello",
+        excerpt: "Excerpt",
+        status: "draft",
+        publishedAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-02T00:00:00.000Z",
+        contentLength: 12,
+        contentHash: "hash",
+      }),
+    );
+
+    const response = await createPostBodyUpdateApp().request("http://localhost/posts/hello/edit", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        content: "# updated",
+      }),
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/posts/hello/edit?saved=1");
+    expect(updatePost).toHaveBeenCalledWith(expect.any(Object), "hello", { content: "# updated" });
+  });
+
+  it("returns 400 when content field is missing", async function () {
+    const response = await createPostBodyUpdateApp().request("http://localhost/posts/hello/edit", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        title: "ignored",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.text()).toBe("Invalid request body");
+    expect(updatePost).not.toHaveBeenCalled();
+  });
+
+  it("updates title when title field is provided", async function () {
+    vi.mocked(updatePost).mockReturnValue(
+      Effect.succeed({
+        id: "post-1",
+        slug: "hello",
+        title: "Updated Title",
+        excerpt: "Excerpt",
+        status: "draft",
+        publishedAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-02T00:00:00.000Z",
+        contentLength: 12,
+        contentHash: "hash",
+      }),
+    );
+
+    const response = await createPostBodyUpdateApp().request("http://localhost/posts/hello/edit", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        title: "Updated Title",
+        content: "# updated",
+      }),
+    });
+
+    expect(response.status).toBe(303);
+    expect(updatePost).toHaveBeenCalledWith(expect.any(Object), "hello", {
+      title: "Updated Title",
+      content: "# updated",
+    });
+  });
+
+  it("returns 400 when title is blank", async function () {
+    const response = await createPostBodyUpdateApp().request("http://localhost/posts/hello/edit", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        title: "  ",
+        content: "# updated",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.text()).toBe("Invalid title");
+    expect(updatePost).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when target post is not found", async function () {
+    vi.mocked(updatePost).mockReturnValue(Effect.fail(new PostNotFoundError({ slug: "missing" })));
+
+    const response = await createPostBodyUpdateApp().request(
+      "http://localhost/posts/missing/edit",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          content: "# updated",
+        }),
+      },
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(404);
+    expect(body).toContain("404 - Not Found");
   });
 });

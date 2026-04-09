@@ -301,9 +301,11 @@ describe("post-repository", function () {
 
     const posts = await Effect.runPromise(listPublishedPosts(db as unknown as D1Database));
 
-    expect(posts.map(function (post) {
-      return post.slug;
-    })).toEqual(["post-3", "post-2"]);
+    expect(
+      posts.map(function (post) {
+        return post.slug;
+      }),
+    ).toEqual(["post-3", "post-2"]);
   });
 
   it("listPosts returns all posts and normalizes status fallback to published", async function () {
@@ -322,9 +324,11 @@ describe("post-repository", function () {
 
     const posts = await Effect.runPromise(listPosts(db as unknown as D1Database));
 
-    expect(posts.map(function (post) {
-      return post.slug;
-    })).toEqual(["post-2", "post-1"]);
+    expect(
+      posts.map(function (post) {
+        return post.slug;
+      }),
+    ).toEqual(["post-2", "post-1"]);
     expect(posts[0]?.status).toBe("published");
     expect(posts[1]?.status).toBe("draft");
   });

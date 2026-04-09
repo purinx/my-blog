@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { Hono } from "hono";
 import * as v from "valibot";
 import { ErrorPage } from "../../components/Error";
+import { PostBodyEditor } from "../../components/post-body-editor";
 import { PostDetail } from "../../components/post-detail";
 import type { AppContext, Bindings } from "../../db";
 import { getDb } from "../../db";
@@ -37,6 +38,13 @@ const UpdatePostSchema = v.object({
 
 const postsController = new Hono<{ Bindings: Bindings }>();
 
+function renderPostNotFound(c: AppContext) {
+  return c.html(
+    <ErrorPage statusCode={404} description="記事が見つかりませんでした。" showHomeLink />,
+    404,
+  );
+}
+
 export function getPostPage(c: AppContext) {
   const slug = c.req.param("slug");
   return Effect.runPromise(
@@ -50,11 +58,9 @@ export function getPostPage(c: AppContext) {
         c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
         return c.html(<PostDetail post={result.post} content={result.content} />);
       }),
-      Effect.catchTag("PostNotFoundError", () =>
-        Effect.succeed(
-          c.html(<ErrorPage statusCode={404} description="記事が見つかりませんでした。" showHomeLink />, 404),
-        ),
-      ),
+      Effect.catchTag("PostNotFoundError", function () {
+        return Effect.succeed(renderPostNotFound(c));
+      }),
       Effect.catchAllCause((cause) => {
         const errorId = logServerError({
           route: c.req.path,
@@ -67,6 +73,94 @@ export function getPostPage(c: AppContext) {
             <ErrorPage
               statusCode={500}
               description="記事の取得に失敗しました。"
+              errorId={errorId}
+              showHomeLink
+            />,
+            500,
+          ),
+        );
+      }),
+    ),
+  );
+}
+
+export function getPostBodyEditorPage(c: AppContext) {
+  const slug = c.req.param("slug");
+  const saved = c.req.query("saved") === "1";
+  return Effect.runPromise(
+    getPostWithContent(getDb(c), slug).pipe(
+      Effect.map(function (result) {
+        return c.html(<PostBodyEditor post={result.post} content={result.content} saved={saved} />);
+      }),
+      Effect.catchTag("PostNotFoundError", function () {
+        return Effect.succeed(renderPostNotFound(c));
+      }),
+      Effect.catchAllCause(function (cause) {
+        const errorId = logServerError({
+          route: c.req.path,
+          method: c.req.method,
+          statusCode: 500,
+          cause,
+        });
+        return Effect.succeed(
+          c.html(
+            <ErrorPage
+              statusCode={500}
+              description="編集画面の表示に失敗しました。"
+              errorId={errorId}
+              showHomeLink
+            />,
+            500,
+          ),
+        );
+      }),
+    ),
+  );
+}
+
+export async function updatePostBody(c: AppContext) {
+  const slug = c.req.param("slug");
+  const form = await c.req.parseBody();
+  const content = form.content;
+  const title = form.title;
+
+  if (typeof content !== "string") {
+    return c.text("Invalid request body", 400);
+  }
+
+  if (title !== undefined && typeof title !== "string") {
+    return c.text("Invalid request body", 400);
+  }
+
+  const updateInput: { content: string; title?: string } = { content };
+  if (typeof title === "string") {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) {
+      return c.text("Invalid title", 400);
+    }
+    updateInput.title = normalizedTitle;
+  }
+
+  return Effect.runPromise(
+    updatePost(getDb(c), slug, updateInput).pipe(
+      Effect.map(function () {
+        return c.redirect(`/posts/${slug}/edit?saved=1`, 303);
+      }),
+      Effect.catchTag("PostNotFoundError", function () {
+        return Effect.succeed(renderPostNotFound(c));
+      }),
+      Effect.catchAllCause(function (cause) {
+        const errorId = logServerError({
+          route: c.req.path,
+          method: c.req.method,
+          statusCode: 500,
+          cause,
+        });
+        return Effect.succeed(
+          c.html(
+            <ErrorPage
+              statusCode={500}
+              description="本文の更新に失敗しました。"
               errorId={errorId}
               showHomeLink
             />,

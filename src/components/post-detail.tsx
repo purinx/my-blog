@@ -4,13 +4,21 @@ import { PostArticle } from "../features/post/components/post-article";
 import { TocSidebar } from "../features/post/components/toc-sidebar";
 import { Layout } from "../ui/layout";
 
+const wrapperStyle = css`
+  max-width: 720px;
+`;
+const topActionsStyle = css`
+  margin-bottom: 1rem;
+`;
+
 export function PostDetail({ post, content }: { post: Post; content: string }) {
-  const wrapperStyle = css`
-    max-width: 720px;
-  `;
+  
 
   return (
     <Layout wide>
+      <div class={topActionsStyle}>
+        <a href={`/posts/${post.slug}/edit`}>本文を編集</a>
+      </div>
       <div id="post-wrapper" class={wrapperStyle}>
         <PostArticle post={post} />
         <TocSidebar />
