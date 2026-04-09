@@ -12,10 +12,10 @@ export function Header({ maxWidth }: HeaderProps) {
   `;
   const navStyle = css`
     max-width: ${maxWidth};
-    margin: 0 auto;
-    padding: 0 1rem;
+    margin: 0;
+    padding: 0 0.35rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
   `;
   const logoStyle = css`
@@ -29,7 +29,7 @@ export function Header({ maxWidth }: HeaderProps) {
     <header class={headerStyle}>
       <nav class={navStyle}>
         <a href="/" class={logoStyle}>
-          My Blog
+          Purin's Blog
         </a>
       </nav>
     </header>

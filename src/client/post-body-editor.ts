@@ -1,19 +1,35 @@
+import { CheckIcon } from "@radix-ui/react-icons";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+
 export function setButtonState(button: HTMLButtonElement, state: "idle" | "saving" | "saved") {
   button.dataset.state = state;
 
+  const label =
+    typeof button.querySelector === "function"
+      ? button.querySelector<HTMLElement>('[data-role="submit-label"]')
+      : null;
+  function setLabel(text: string) {
+    if (label) {
+      label.textContent = text;
+      return;
+    }
+    button.textContent = text;
+  }
+
   if (state === "saving") {
-    button.textContent = "保存中...";
+    setLabel("保存中...");
     button.disabled = true;
     return;
   }
 
   if (state === "saved") {
-    button.textContent = "保存済み";
+    setLabel("保存済み");
     button.disabled = false;
     return;
   }
 
-  button.textContent = "保存";
+  setLabel("保存する");
   button.disabled = false;
 }
 
@@ -45,36 +61,48 @@ export function insertTabAtCursor(textarea: HTMLTextAreaElement) {
 
 export function setupPostBodyEditor() {
   const titleInput = document.getElementById("post-body-editor-title");
-  const titleToggleButton = document.getElementById("post-body-editor-title-toggle");
   const textarea = document.getElementById("post-body-editor-textarea");
   const form = document.getElementById("post-body-editor-form");
   const submitButton = document.getElementById("post-body-editor-submit");
+  const submitIcon = document.getElementById("post-body-editor-submit-icon");
 
-  if (
-    titleInput instanceof HTMLInputElement &&
-    titleToggleButton instanceof HTMLButtonElement
-  ) {
-    function setTitleEditing(editing: boolean) {
-      titleInput.readOnly = !editing;
-      titleToggleButton.dataset.state = editing ? "editing" : "idle";
-      titleToggleButton.textContent = editing ? "編集完了" : "タイトル編集";
+  if (submitIcon) {
+    const root = createRoot(submitIcon);
+    root.render(createElement(CheckIcon));
+  }
 
-      if (editing) {
-        titleInput.focus();
-        titleInput.select();
-      }
+  if (titleInput instanceof HTMLTextAreaElement) {
+    const titleField = titleInput;
+
+    function resizeTitleField() {
+      titleField.style.height = "auto";
+      titleField.style.height = `${titleField.scrollHeight}px`;
     }
 
+    function setTitleEditing(editing: boolean) {
+      titleField.readOnly = !editing;
+    }
+
+    resizeTitleField();
     setTitleEditing(false);
 
-    titleToggleButton.addEventListener("click", function () {
-      setTitleEditing(titleInput.readOnly);
+    titleField.addEventListener("focus", function () {
+      if (!titleField.readOnly) return;
+      setTitleEditing(true);
     });
 
-    titleInput.addEventListener("keydown", function (event) {
+    titleField.addEventListener("keydown", function (event) {
       if (event.key !== "Enter") return;
       event.preventDefault();
+      titleField.blur();
+    });
+
+    titleField.addEventListener("blur", function () {
       setTitleEditing(false);
+    });
+
+    titleField.addEventListener("input", function () {
+      resizeTitleField();
     });
   }
 
@@ -82,7 +110,7 @@ export function setupPostBodyEditor() {
   if (!(form instanceof HTMLFormElement)) return;
   if (!(submitButton instanceof HTMLButtonElement)) return;
 
-  if (titleInput instanceof HTMLInputElement) {
+  if (titleInput instanceof HTMLTextAreaElement) {
     titleInput.addEventListener("input", function () {
       if (submitButton.dataset.state !== "saved") return;
       setButtonState(submitButton, "idle");

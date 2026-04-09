@@ -76,6 +76,7 @@ async function parseJson(response: Response): Promise<unknown> {
 beforeEach(function () {
   vi.clearAllMocks();
   vi.mocked(getDb).mockReturnValue({} as D1Database);
+  vi.mocked(listPosts).mockReturnValue(Effect.succeed([]));
 });
 
 afterEach(function () {
@@ -442,6 +443,22 @@ describe("getPostPage", function () {
 
 describe("getPostBodyEditorPage", function () {
   it("returns rendered editor page with existing content", async function () {
+    vi.mocked(listPosts).mockReturnValue(
+      Effect.succeed([
+        {
+          id: "post-1",
+          slug: "hello",
+          title: "Hello",
+          excerpt: "Excerpt",
+          status: "draft",
+          publishedAt: "2025-01-01T00:00:00.000Z",
+          updatedAt: "2025-01-01T00:00:00.000Z",
+          contentLength: 12,
+          contentHash: "post-hash",
+        },
+      ]),
+    );
+
     vi.mocked(getPostWithContent).mockReturnValue(
       Effect.succeed({
         post: {
@@ -466,9 +483,10 @@ describe("getPostBodyEditorPage", function () {
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(body).toContain("本文を編集: Hello");
+    expect(body).toContain("記事一覧");
+    expect(body).toContain("/posts/hello/edit");
+    expect(body).toContain(">Hello</textarea>");
     expect(body).toContain('id="post-body-editor-title"');
-    expect(body).toContain("タイトル編集");
     expect(body).toContain('name="content"');
     expect(body).toContain("# hello");
   });

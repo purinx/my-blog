@@ -86,11 +86,14 @@ export function getPostPage(c: AppContext) {
 
 export function getPostBodyEditorPage(c: AppContext) {
   const slug = c.req.param("slug");
-  const saved = c.req.query("saved") === "1";
+  const db = getDb(c);
   return Effect.runPromise(
-    getPostWithContent(getDb(c), slug).pipe(
-      Effect.map(function (result) {
-        return c.html(<PostBodyEditor post={result.post} content={result.content} saved={saved} />);
+    Effect.all({
+      result: getPostWithContent(db, slug),
+      posts: listPosts(db),
+    }).pipe(
+      Effect.map(function ({ result, posts }) {
+        return c.html(<PostBodyEditor post={result.post} content={result.content} posts={posts} />);
       }),
       Effect.catchTag("PostNotFoundError", function () {
         return Effect.succeed(renderPostNotFound(c));

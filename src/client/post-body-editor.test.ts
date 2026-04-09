@@ -59,7 +59,7 @@ describe("setButtonState", function () {
 
     const target = button as unknown as MockButton;
     expect(target.dataset.state).toBe("idle");
-    expect(target.textContent).toBe("保存");
+    expect(target.textContent).toBe("保存する");
     expect(target.disabled).toBe(false);
   });
 });

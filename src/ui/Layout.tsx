@@ -5,10 +5,13 @@ import { MainPane } from "./main-pane";
 
 type LayoutProps = PropsWithChildren<{
   wide?: boolean;
+  hideFooter?: boolean;
+  fullWidth?: boolean;
 }>;
 
-export function Layout({ children, wide }: LayoutProps) {
-  const maxWidth = wide ? "1100px" : "800px";
+export function Layout({ children, wide, hideFooter, fullWidth }: LayoutProps) {
+  const headerMaxWidth = wide ? "1100px" : "800px";
+  const mainMaxWidth = fullWidth ? "none" : headerMaxWidth;
 
   const footerStyle = css`
     text-align: center;
@@ -34,11 +37,13 @@ export function Layout({ children, wide }: LayoutProps) {
 				`}</style>
       </head>
       <body>
-        <Header maxWidth={maxWidth} />
-        <MainPane maxWidth={maxWidth}>{children}</MainPane>
-        <footer class={footerStyle}>
-          <p>&copy; 2024 My Blog. Powered by Hono + Cloudflare Workers.</p>
-        </footer>
+        <Header maxWidth={headerMaxWidth} />
+        <MainPane maxWidth={mainMaxWidth}>{children}</MainPane>
+        {hideFooter ? null : (
+          <footer class={footerStyle}>
+            <p>&copy; 2024 My Blog. Powered by Hono + Cloudflare Workers.</p>
+          </footer>
+        )}
       </body>
     </html>
   );
