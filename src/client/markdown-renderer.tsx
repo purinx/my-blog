@@ -5,7 +5,7 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 function setupScrollSpy() {
-  const tocLinks = document.querySelectorAll<HTMLAnchorElement>("#toc-nav a");
+  const tocLinks = document.querySelectorAll<HTMLAnchorElement>("#toc-nav [data-toc-link]");
   if (!tocLinks.length) return;
   const headings = Array.from(tocLinks)
     .map((a) => {
@@ -17,11 +17,9 @@ function setupScrollSpy() {
 
   let activeLink: HTMLAnchorElement | null = null;
   function setActive(link: HTMLAnchorElement) {
-    if (activeLink) activeLink.style.cssText = "";
+    if (activeLink) activeLink.classList.remove("is-active");
     activeLink = link;
-    link.style.color = "var(--link-color)";
-    link.style.background = "var(--accent-soft)";
-    link.style.fontWeight = "600";
+    link.classList.add("is-active");
   }
 
   const observer = new IntersectionObserver(
@@ -57,7 +55,7 @@ function App({ content }: { content: string }) {
       tocNavEl.innerHTML = headings
         .map((h) => {
           const level = parseInt(h.tagName[1]);
-          return `<li style="padding-left:${(level - 1) * 0.75}rem"><a href="#${h.id}" style="display:block;padding:0.3rem 0.5rem;border-radius:4px;text-decoration:none;font-size:0.835rem;line-height:1.4;color:var(--text-secondary);">${h.textContent}</a></li>`;
+          return `<li style="padding-left:${(level - 1) * 0.75}rem"><a data-toc-link href="#${h.id}">${h.textContent}</a></li>`;
         })
         .join("");
     }

@@ -2,7 +2,7 @@ import { css } from "hono/css";
 
 export const articleStyle = css`
   min-width: 0;
-  background: var(--bg-surface-soft);
+  background: var(--post-article-bg);
   border-radius: 10px;
   padding: 2rem 2.5rem;
   h1 {
@@ -40,6 +40,24 @@ export const articleStyle = css`
   li {
     margin: 0.25rem 0;
     line-height: 1.7;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    display: block;
+    overflow-x: auto;
+  }
+  th,
+  td {
+    border: 1px solid var(--border-default);
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-surface);
+    font-weight: 700;
   }
   code {
     background: var(--code-inline-bg);

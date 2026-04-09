@@ -6,7 +6,7 @@ export const cardStyle = css`
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  background: var(--bg-surface);
+  background: var(--post-card-bg-default);
   transition:
     box-shadow 0.2s,
     border-color 0.2s,
@@ -15,8 +15,9 @@ export const cardStyle = css`
   color: var(--text-primary);
   &:hover {
     border-color: var(--border-strong);
-    background: var(--bg-surface-soft);
+    background: var(--post-card-bg-hover);
     box-shadow: 0 6px 14px var(--shadow-soft);
+    color: var(--post-card-text-hover);
   }
 `;
 

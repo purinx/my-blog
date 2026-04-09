@@ -23,7 +23,7 @@ export function Layout({ children, wide, hideFooter, fullWidth }: LayoutProps) {
         <Style />
         <style>{`
           :root {
-            --bg-page: #e6e7ea;
+            --bg-page: #ececec;
             --bg-surface: #eef0f3;
             --bg-surface-soft: #f3f4f6;
             --bg-sidebar: #ffffff;
@@ -34,15 +34,27 @@ export function Layout({ children, wide, hideFooter, fullWidth }: LayoutProps) {
             --text-muted: #4b5a74;
             --link-color: #4e6187;
             --link-hover: #3c4e70;
-            --header-grad-start: #6f7f98;
-            --header-grad-end: #62728b;
+            --header-grad-start: #585858;
+            --header-grad-end: #434343;
             --header-text: #f8fafc;
-            --header-border: rgba(255, 255, 255, 0.18);
-            --accent-soft: #dfe5f0;
-            --accent-border: #b9c5d9;
-            --accent-strong: #6078a3;
-            --accent-outline: #8fa2bf;
-            --button-saving: #55657f;
+            --header-border: rgba(255, 255, 255, 0.2);
+            --accent-soft: #e3e3e3;
+            --accent-border: #bdbdbd;
+            --accent-strong: #5f5f5f;
+            --accent-outline: #9a9a9a;
+            --button-saving: #4f4f4f;
+            --toc-card-bg: #f0f0f0;
+            --toc-card-border: #bfbfbf;
+            --toc-title-color: #5f5f5f;
+            --toc-link-color: #3f3f3f;
+            --toc-link-hover-color: #2f2f2f;
+            --toc-link-hover-bg: #e1e1e1;
+            --toc-link-active-color: #1f1f1f;
+            --toc-link-active-bg: #d6d6d6;
+            --post-article-bg: #ffffff;
+            --post-card-bg-default: #f0f0f0;
+            --post-card-bg-hover: #ffffff;
+            --post-card-text-hover: #3d434d;
             --code-inline-bg: #d9dde5;
             --code-block-bg: #2e3340;
             --code-block-text: #d7deeb;

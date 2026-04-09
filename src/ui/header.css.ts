@@ -7,6 +7,10 @@ export const headerStyle = css`
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--header-border);
+  transition: background 0.22s ease;
+  &:hover {
+    background: linear-gradient(135deg, var(--hover-grad-start) 0%, var(--hover-grad-end) 100%);
+  }
 `;
 
 export const navStyle = css`
