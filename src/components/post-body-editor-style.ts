@@ -58,6 +58,7 @@ export const editorContentStyle = css`
 
 export const sidebarNavStyle = css`
   margin-top: 1.75rem;
+  min-width: 0;
 `;
 
 export const tabListStyle = css`
@@ -66,6 +67,10 @@ export const tabListStyle = css`
   padding: 0;
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
+  > li {
+    min-width: 0;
+  }
 `;
 
 export const tabLinkStyle = css`
@@ -92,6 +97,7 @@ export const tabLinkStyle = css`
 
 export const tabTitleStyle = css`
   display: block;
+  width: 100%;
   max-width: 100%;
   font-size: 0.9rem;
   line-height: 1.35;
@@ -210,4 +216,3 @@ export const textareaStyle = css`
   line-height: 1.6;
   tab-size: 4;
 `;
-
