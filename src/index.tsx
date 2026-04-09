@@ -1,8 +1,9 @@
 import { Effect } from "effect";
 import { Hono } from "hono";
-import { css } from "hono/css";
 import {
+  createNewPost,
   getPostBodyEditorPage,
+  getPostNewPage,
   getPostPage,
   postsController,
   updatePostBody,
@@ -14,6 +15,8 @@ import { ErrorPage } from "./components/Error";
 import { PostCard } from "./features/posts/components/post-card";
 import { type AppContext, type Bindings, getDb } from "./db";
 import { Layout } from "./ui/layout";
+import { linkButtonPillStyle } from "./lib/ui/button.css";
+import { headerRowStyle, pageTitleStyle } from "./index.css";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -27,16 +30,16 @@ app.route("/api/posts", postsController);
 
 // ホームページ
 app.get("/", (c) => {
-  const titleStyle = css`
-    margin-bottom: 2rem;
-  `;
   return Effect.runPromise(
     listPublishedPosts(getDb(c)).pipe(
       Effect.map((posts) => {
         c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
         return c.html(
           <Layout>
-            <h1 class={titleStyle}>Recent Posts</h1>
+            <div class={headerRowStyle}>
+              <h1 class={pageTitleStyle}>Recent Posts</h1>
+              <a href="/posts/new" class={linkButtonPillStyle}>+ 新規作成</a>
+            </div>
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
@@ -66,6 +69,8 @@ app.get("/", (c) => {
   );
 });
 
+app.get("/posts/new", getPostNewPage);
+app.post("/posts/new", createNewPost);
 app.get("/posts/:slug", getPostPage);
 app.get("/posts/:slug/edit", getPostBodyEditorPage);
 app.post("/posts/:slug/edit", updatePostBody);

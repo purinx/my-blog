@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { ErrorPage } from "../../components/Error";
 import { PostBodyEditor } from "../../components/post-body-editor";
 import { PostDetail } from "../../components/post-detail";
+import { PostNew } from "../../components/post-new";
 import type { AppContext, Bindings } from "../../db";
 import { getDb } from "../../db";
 import { logServerError } from "../utils/error-log";
@@ -295,5 +296,87 @@ postsController.delete("/:slug", (c) => {
     ),
   );
 });
+
+export function getPostNewPage(c: AppContext) {
+  return Effect.runPromise(
+    listPosts(getDb(c)).pipe(
+      Effect.map(function (posts) {
+        return c.html(<PostNew posts={posts} />);
+      }),
+      Effect.catchAllCause(function (cause) {
+        const errorId = logServerError({
+          route: c.req.path,
+          method: c.req.method,
+          statusCode: 500,
+          cause,
+        });
+        return Effect.succeed(
+          c.html(
+            <ErrorPage
+              statusCode={500}
+              description="画面の表示に失敗しました。"
+              errorId={errorId}
+              showHomeLink
+            />,
+            500,
+          ),
+        );
+      }),
+    ),
+  );
+}
+
+export async function createNewPost(c: AppContext) {
+  const form = await c.req.parseBody();
+  const slug = typeof form.slug === "string" ? form.slug.trim() : "";
+  const title = typeof form.title === "string" ? form.title.trim() : "";
+  const excerpt = typeof form.excerpt === "string" ? form.excerpt.trim() : "";
+  const content = typeof form.content === "string" ? form.content.trim() : "";
+  const status = form.status === "published" ? "published" : "draft";
+
+  const values = { slug, title, excerpt, content, status };
+
+  if (!slug || !title || !excerpt || !content) {
+    const posts = await Effect.runPromise(listPosts(getDb(c)));
+    return c.html(<PostNew posts={posts} error="すべての項目を入力してください。" values={values} />, 422);
+  }
+
+  return Effect.runPromise(
+    createPost(getDb(c), { slug, title, excerpt, content, status }).pipe(
+      Effect.map(function (post) {
+        return c.redirect(`/posts/${post.slug}/edit`, 303);
+      }),
+      Effect.catchTag("SlugConflictError", function () {
+        return listPosts(getDb(c)).pipe(
+          Effect.map(function (posts) {
+            return c.html(
+              <PostNew posts={posts} error={`スラッグ "${slug}" はすでに使われています。`} values={values} />,
+              409,
+            );
+          }),
+        );
+      }),
+      Effect.catchAllCause(function (cause) {
+        const errorId = logServerError({
+          route: c.req.path,
+          method: c.req.method,
+          statusCode: 500,
+          cause,
+        });
+        return Effect.succeed(
+          c.html(
+            <ErrorPage
+              statusCode={500}
+              description="記事の作成に失敗しました。"
+              errorId={errorId}
+              showHomeLink
+            />,
+            500,
+          ),
+        );
+      }),
+    ),
+  );
+}
 
 export { postsController };

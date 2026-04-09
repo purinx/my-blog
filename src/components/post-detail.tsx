@@ -1,12 +1,8 @@
-import { css } from "hono/css";
 import type { Post } from "../backend/domain/post";
 import { PostArticle } from "../features/post/components/post-article";
 import { TocSidebar } from "../features/post/components/toc-sidebar";
 import { Layout } from "../ui/layout";
-
-const wrapperStyle = css`
-  max-width: 720px;
-`;
+import { wrapperStyle } from "./post-detail.css";
 
 export function PostDetail({ post, content }: { post: Post; content: string }) {
   return (

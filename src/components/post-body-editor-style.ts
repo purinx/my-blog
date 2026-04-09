@@ -135,12 +135,7 @@ export const titleInputStyle = css`
   background: transparent;
   color: var(--text-primary);
   font-family:
-    -apple-system,
-    "Hiragino Sans",
-    "Hiragino Kaku Gothic ProN",
-    "Yu Gothic",
-    "YuGothic",
-    sans-serif;
+    -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", sans-serif;
   font-size: clamp(1.35rem, 2.3vw, 2.1rem);
   font-weight: 700;
   line-height: 1.3;
@@ -192,6 +187,7 @@ export const backButtonStyle = css`
 export const formStyle = css`
   display: grid;
   gap: 0.75rem;
+  padding-top: 2rem;
 `;
 
 export const labelStyle = css`
@@ -215,34 +211,3 @@ export const textareaStyle = css`
   tab-size: 4;
 `;
 
-export const submitBaseStyle = css`
-  width: fit-content;
-  border: 0;
-  border-radius: 9999px;
-  padding: 0.7rem 1.25rem;
-  background: linear-gradient(135deg, var(--header-grad-start) 0%, var(--header-grad-end) 100%);
-  color: var(--header-text);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.18s ease;
-  [data-role="submit-content"] {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-  }
-  [data-role="submit-icon"] {
-    width: 15px;
-    height: 15px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  &[data-state="saved"] [data-role="submit-icon"] {
-    display: inline-flex;
-  }
-  &[data-state="saving"] {
-    background: var(--button-saving);
-    cursor: wait;
-  }
-`;

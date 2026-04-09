@@ -1,4 +1,5 @@
 import type { Post } from "../backend/domain/post";
+import { linkButtonBlockStyle } from "../lib/ui/button.css";
 import { Button } from "../lib/ui/button";
 import { Layout } from "../ui/layout";
 import {
@@ -13,7 +14,6 @@ import {
   saveRowStyle,
   sidebarNavStyle,
   sidebarStyle,
-  submitBaseStyle,
   tabLinkStyle,
   tabListStyle,
   tabTitleStyle,
@@ -36,6 +36,7 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
       <div class={editorShellStyle}>
         <aside class={sidebarStyle}>
           <nav class={sidebarNavStyle}>
+            <a href="/posts/new" class={linkButtonBlockStyle}>+ 新規作成</a>
             <ul class={tabListStyle}>
               {posts.map(function (item) {
                 const isActive = item.slug === post.slug;
@@ -80,7 +81,6 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
                 id="post-body-editor-submit"
                 type="submit"
                 form="post-body-editor-form"
-                class={submitBaseStyle}
                 data-state={submitState}
               >
                 <span data-role="submit-content">

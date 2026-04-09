@@ -1,4 +1,6 @@
+import { clsx } from "clsx";
 import type { PropsWithChildren } from "hono/jsx";
+import { submitButtonStyle } from "./button.css";
 
 type ButtonProps = PropsWithChildren<{
   id?: string;
@@ -19,7 +21,14 @@ export function Button({
   "data-state": dataState,
 }: ButtonProps) {
   return (
-    <button id={id} type={type} form={form} class={className} disabled={disabled} data-state={dataState}>
+    <button
+      id={id}
+      type={type}
+      form={form}
+      class={clsx(submitButtonStyle, className)}
+      disabled={disabled}
+      data-state={dataState}
+    >
       {children}
     </button>
   );

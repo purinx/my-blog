@@ -28,6 +28,13 @@ export default defineConfig(function ({ mode }) {
       }),
       devServer({
         entry: "src/index.tsx",
+        exclude: [
+          /^\/variables\.css$/,
+          /^\/style\.css$/,
+          /^\/favicon\.ico$/,
+          /^\/icons\/.*/,
+          /^\/static\/.*/,
+        ],
       }),
     ],
   };
