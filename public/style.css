@@ -1,0 +1,11 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}
+a { color: var(--link-color); }
+a:hover { color: var(--link-hover); }
+h1, h2, h3 { margin: 1rem 0; }
+p { margin: 0.5rem 0; }

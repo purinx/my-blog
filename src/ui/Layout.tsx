@@ -1,6 +1,5 @@
 import { Style, css } from "hono/css";
 import type { PropsWithChildren } from "hono/jsx";
-import { rootCssVariables } from "../lib/style/variables";
 import { Header } from "./header";
 import { MainPane } from "./main-pane";
 
@@ -29,21 +28,9 @@ export function Layout({ children, wide, hideFooter, fullWidth }: LayoutProps) {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>My Blog</title>
+        <link rel="stylesheet" href="/variables.css" />
+        <link rel="stylesheet" href="/style.css" />
         <Style />
-        <style>{`
-          ${rootCssVariables}
-					* { margin: 0; padding: 0; box-sizing: border-box; }
-					body {
-					  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-					  line-height: 1.6;
-					  color: var(--text-primary);
-					  background: var(--bg-page);
-					}
-					a { color: var(--link-color); }
-					a:hover { color: var(--link-hover); }
-					h1, h2, h3 { margin: 1rem 0; }
-					p { margin: 0.5rem 0; }
-				`}</style>
       </head>
       <body>
         <Header maxWidth={headerMaxWidth} />
