@@ -1,7 +1,12 @@
 import { Effect } from "effect";
 import { Hono } from "hono";
 import { css } from "hono/css";
-import { getPostPage, postsController } from "./backend/controllers/posts-controller";
+import {
+  getPostBodyEditorPage,
+  getPostPage,
+  postsController,
+  updatePostBody,
+} from "./backend/controllers/posts-controller";
 import { listPublishedPosts } from "./backend/repositories/post-repository";
 import { logServerError } from "./backend/utils/error-log";
 import { requireApiKey } from "./backend/utils/auth";
@@ -62,14 +67,12 @@ app.get("/", (c) => {
 });
 
 app.get("/posts/:slug", getPostPage);
+app.get("/posts/:slug/edit", getPostBodyEditorPage);
+app.post("/posts/:slug/edit", updatePostBody);
 
 app.notFound((c) =>
   c.html(
-    <ErrorPage
-      statusCode={404}
-      description="ページが見つかりませんでした。"
-      showHomeLink
-    />,
+    <ErrorPage statusCode={404} description="ページが見つかりませんでした。" showHomeLink />,
     404,
   ),
 );

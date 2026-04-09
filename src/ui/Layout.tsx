@@ -1,33 +1,15 @@
 import { Style, css } from "hono/css";
 import type { PropsWithChildren } from "hono/jsx";
+import { Header } from "./header";
+import { MainPane } from "./main-pane";
 
-export function Layout({ children, wide }: PropsWithChildren<{ wide?: boolean }>) {
+type LayoutProps = PropsWithChildren<{
+  wide?: boolean;
+}>;
+
+export function Layout({ children, wide }: LayoutProps) {
   const maxWidth = wide ? "1100px" : "800px";
 
-  const headerStyle = css`
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem 0;
-  `;
-  const navStyle = css`
-    max-width: ${maxWidth};
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  `;
-  const logoStyle = css`
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-decoration: none;
-    color: white;
-  `;
-  const mainStyle = css`
-    max-width: ${maxWidth};
-    margin: 2rem auto;
-    padding: 0 1rem;
-  `;
   const footerStyle = css`
     text-align: center;
     padding: 2rem;
@@ -52,14 +34,8 @@ export function Layout({ children, wide }: PropsWithChildren<{ wide?: boolean }>
 				`}</style>
       </head>
       <body>
-        <header class={headerStyle}>
-          <nav class={navStyle}>
-            <a href="/" class={logoStyle}>
-              My Blog
-            </a>
-          </nav>
-        </header>
-        <main class={mainStyle}>{children}</main>
+        <Header maxWidth={maxWidth} />
+        <MainPane maxWidth={maxWidth}>{children}</MainPane>
         <footer class={footerStyle}>
           <p>&copy; 2024 My Blog. Powered by Hono + Cloudflare Workers.</p>
         </footer>
