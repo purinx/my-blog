@@ -56,6 +56,26 @@ export const linkButtonPillStyle = css`
     color: var(--header-text);
     background: linear-gradient(135deg, var(--hover-grad-start) 0%, var(--hover-grad-end) 100%);
   }
+  [data-role="button-content"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  [data-role="button-icon"] {
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    mask-image: url("/icons/plus.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: url("/icons/plus.svg");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    display: block;
+  }
 `;
 
 /** サイドバーに置くブロック型のリンクボタン */
@@ -76,5 +96,25 @@ export const linkButtonBlockStyle = css`
   &:hover {
     color: var(--header-text);
     background: linear-gradient(135deg, var(--hover-grad-start) 0%, var(--hover-grad-end) 100%);
+  }
+  [data-role="button-content"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  [data-role="button-icon"] {
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    mask-image: url("/icons/plus.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: url("/icons/plus.svg");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    display: block;
   }
 `;

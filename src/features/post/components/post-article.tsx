@@ -1,9 +1,9 @@
 import type { Post } from "../../../backend/domain/post";
+import { IconButton } from "../../../lib/ui/icon-button";
 import {
   articleStyle,
-  editLinkStyle,
+  editIconButtonStyle,
   metaStyle,
-  srOnlyStyle,
   titleRowStyle,
   titleStyle,
 } from "./post-article.css";
@@ -24,10 +24,9 @@ export function PostArticle({ post, editHref }: PostArticleProps) {
     <article class={articleStyle}>
       <div class={titleRowStyle}>
         <h1 class={titleStyle}>{post.title}</h1>
-        <a href={editHref} class={editLinkStyle} aria-label="本文を編集" title="本文を編集">
+        <IconButton href={editHref} class={editIconButtonStyle} label="本文を編集">
           <img src="/icons/pencil-2.svg" alt="" aria-hidden="true" />
-          <span class={srOnlyStyle}>本文を編集</span>
-        </a>
+        </IconButton>
       </div>
       <div class={metaStyle}>
         <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>

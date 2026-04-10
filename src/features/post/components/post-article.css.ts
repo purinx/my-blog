@@ -119,35 +119,8 @@ export const titleStyle = css`
   flex: 1 1 auto;
 `;
 
-export const editLinkStyle = css`
-  width: 2.25rem;
-  height: 2.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-decoration: none;
+export const editIconButtonStyle = css`
   color: var(--text-secondary);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  flex-shrink: 0;
-  img {
-    width: 22px;
-    height: 22px;
-    display: block;
-  }
-`;
-
-export const srOnlyStyle = css`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 `;
 
 export const metaStyle = css`

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Radix Icon Cache"
+  short_description: "Cache and publish Radix SVG icons"
+  default_prompt: "Sync Radix Icons into tmp/radix-icons and publish requested icons to public/icons."

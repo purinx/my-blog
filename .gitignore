@@ -5,3 +5,4 @@ storybook-static
 .dev.vars
 *.log
 public/client/
+tmp

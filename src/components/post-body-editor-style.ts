@@ -170,24 +170,10 @@ export const headingGroupStyle = css`
   min-width: 0;
 `;
 
-export const backButtonStyle = css`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-primary);
-  text-decoration: none;
-  padding: 0;
-  background: transparent;
-  line-height: 0;
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 2.5rem;
+export const backIconButtonStyle = css`
+  --icon-button-size: 2.5rem;
+  --icon-button-icon-size: 32px;
   margin-top: 0.15rem;
-  img {
-    width: 32px;
-    height: 32px;
-    display: block;
-  }
 `;
 
 export const formStyle = css`

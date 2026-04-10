@@ -1,9 +1,10 @@
 import type { Post } from "../backend/domain/post";
 import { linkButtonBlockStyle } from "../lib/ui/button.css";
 import { Button } from "../lib/ui/button";
+import { IconButton } from "../lib/ui/icon-button";
 import { Layout } from "../ui/layout";
 import {
-  backButtonStyle,
+  backIconButtonStyle,
   editorContentFrameStyle,
   editorContentStyle,
   editorShellStyle,
@@ -36,7 +37,12 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
       <div class={editorShellStyle}>
         <aside class={sidebarStyle}>
           <nav class={sidebarNavStyle}>
-            <a href="/posts/new" class={linkButtonBlockStyle}>+ 新規作成</a>
+            <a href="/posts/new" class={linkButtonBlockStyle}>
+              <span data-role="button-content">
+                <span data-role="button-icon" aria-hidden="true" />
+                新規作成
+              </span>
+            </a>
             <ul class={tabListStyle}>
               {posts.map(function (item) {
                 const isActive = item.slug === post.slug;
@@ -58,9 +64,9 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
         <div class={editorContentFrameStyle}>
           <section class={editorContentStyle}>
             <div class={headerRowStyle}>
-              <a href={`/posts/${post.slug}`} class={backButtonStyle} aria-label="記事を見る" title="記事を見る">
+              <IconButton href={`/posts/${post.slug}`} class={backIconButtonStyle} label="記事を見る">
                 <img src="/icons/chevron-left.svg" alt="" aria-hidden="true" />
-              </a>
+              </IconButton>
               <div class={headingGroupStyle}>
                 <textarea
                   id="post-body-editor-title"

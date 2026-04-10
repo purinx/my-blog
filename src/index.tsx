@@ -38,7 +38,12 @@ app.get("/", (c) => {
           <Layout>
             <div class={headerRowStyle}>
               <h1 class={pageTitleStyle}>Recent Posts</h1>
-              <a href="/posts/new" class={linkButtonPillStyle}>+ 新規作成</a>
+              <a href="/posts/new" class={linkButtonPillStyle}>
+                <span data-role="button-content">
+                  <span data-role="button-icon" aria-hidden="true" />
+                  新規作成
+                </span>
+              </a>
             </div>
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />

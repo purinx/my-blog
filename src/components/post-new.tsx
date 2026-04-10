@@ -40,7 +40,10 @@ export function PostNew({ posts, error, values }: PostNewProps) {
         <aside class={sidebarStyle}>
           <nav class={sidebarNavStyle}>
             <a href="/posts/new" class={linkButtonBlockStyle}>
-              + 新規作成
+              <span data-role="button-content">
+                <span data-role="button-icon" aria-hidden="true" />
+                新規作成
+              </span>
             </a>
             <ul class={tabListStyle}>
               {posts.map(function (item) {

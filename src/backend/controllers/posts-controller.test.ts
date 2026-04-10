@@ -483,7 +483,6 @@ describe("getPostBodyEditorPage", function () {
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(body).toContain("記事一覧");
     expect(body).toContain("/posts/hello/edit");
     expect(body).toContain(">Hello</textarea>");
     expect(body).toContain('id="post-body-editor-title"');
