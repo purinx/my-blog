@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { Hono } from "hono";
+import { logger } from "hono/logger";
 import {
   createNewPost,
   getPostBodyEditorPage,
@@ -9,30 +10,34 @@ import {
   updatePostBody,
 } from "./backend/controllers/posts-controller";
 import { listPublishedPosts } from "./backend/repositories/post-repository";
-import { logServerError } from "./backend/utils/error-log";
 import { requireApiKey } from "./backend/utils/auth";
+import { logServerError } from "./backend/utils/error-log";
 import { ErrorPage } from "./components/Error";
 import { PostCard } from "./features/posts/components/post-card";
 import { type AppContext, type Bindings, getDb } from "./db";
-import { Layout } from "./ui/layout";
 import { linkButtonPillStyle } from "./lib/ui/button.css";
 import { headerRowStyle, pageTitleStyle } from "./index.css";
+import { Layout } from "./ui/layout";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.use("/api/*", async (c, next) => {
+app.use(logger());
+app.use("/api/*", async function (c, next) {
   const unauthorized = requireApiKey(c as AppContext);
-  if (unauthorized) return unauthorized;
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   return next();
 });
 
 app.route("/api/posts", postsController);
 
 // ホームページ
-app.get("/", (c) => {
+app.get("/", function (c) {
   return Effect.runPromise(
     listPublishedPosts(getDb(c)).pipe(
-      Effect.map((posts) => {
+      Effect.map(function (posts) {
         c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
         return c.html(
           <Layout>
@@ -45,19 +50,20 @@ app.get("/", (c) => {
                 </span>
               </a>
             </div>
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+            {posts.map(function (post) {
+              return <PostCard key={post.id} post={post} />;
+            })}
           </Layout>,
         );
       }),
-      Effect.catchAllCause((cause) => {
+      Effect.catchAllCause(function (cause) {
         const errorId = logServerError({
           route: c.req.path,
           method: c.req.method,
           statusCode: 500,
           cause,
         });
+
         return Effect.succeed(
           c.html(
             <ErrorPage
@@ -80,11 +86,11 @@ app.get("/posts/:slug", getPostPage);
 app.get("/posts/:slug/edit", getPostBodyEditorPage);
 app.post("/posts/:slug/edit", updatePostBody);
 
-app.notFound((c) =>
-  c.html(
+app.notFound(function (c) {
+  return c.html(
     <ErrorPage statusCode={404} description="ページが見つかりませんでした。" showHomeLink />,
     404,
-  ),
-);
+  );
+});
 
 export default app;
