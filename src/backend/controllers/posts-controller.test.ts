@@ -38,16 +38,12 @@ import {
   updatePost,
 } from "../repositories/post-repository";
 import { logServerError } from "../utils/error-log";
-import {
-  getPostBodyEditorPage,
-  getPostPage,
-  postsController,
-  updatePostBody,
-} from "./posts-controller";
+import { getPostBodyEditorPage, getPostPage, updatePostBody } from "./posts-controller";
+import { postsApiController } from "./api/posts-controller";
 
 function createApp(): Hono {
   const app = new Hono();
-  app.route("/posts", postsController);
+  app.route("/posts", postsApiController);
   return app;
 }
 
@@ -83,7 +79,7 @@ afterEach(function () {
   vi.restoreAllMocks();
 });
 
-describe("postsController", function () {
+describe("postsApiController", function () {
   it("GET / returns posts", async function () {
     vi.mocked(listPosts).mockReturnValue(
       Effect.succeed([

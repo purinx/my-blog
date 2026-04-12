@@ -1,55 +1,25 @@
 import { Data, Effect } from "effect";
-import { Hono } from "hono";
-import * as v from "valibot";
 import { ErrorPage } from "../../components/Error";
 import { PostBodyEditor } from "../../components/post-body-editor";
 import { PostDetail } from "../../components/post-detail";
 import { PostNew } from "../../components/post-new";
-import type { AppContext, Bindings } from "../../db";
+import type { AppContext } from "../../db";
 import { getDb } from "../../db";
 import { logServerError } from "../utils/error-log";
 import {
   createPost,
-  deletePost,
   getPostWithContent,
   getPublishedPostWithContent,
   listPosts,
   updatePost,
 } from "../repositories/post-repository";
 
-const NonEmptyString = v.pipe(v.string(), v.minLength(1));
-const PostStatus = v.picklist(["draft", "published"]);
-
-const CreatePostSchema = v.object({
-  slug: NonEmptyString,
-  title: NonEmptyString,
-  excerpt: NonEmptyString,
-  content: NonEmptyString,
-  status: v.optional(PostStatus),
-  publishedAt: v.optional(NonEmptyString),
-});
-
-const UpdatePostSchema = v.object({
-  title: v.optional(NonEmptyString),
-  excerpt: v.optional(NonEmptyString),
-  content: v.optional(NonEmptyString),
-  status: v.optional(PostStatus),
-  publishedAt: v.optional(NonEmptyString),
-});
-
 type PostStatusValue = "draft" | "published";
-
-interface CreatePostRequestBody extends v.InferOutput<typeof CreatePostSchema> {}
-
-interface UpdatePostRequestBody extends v.InferOutput<typeof UpdatePostSchema> {}
 
 interface UpdatePostBodyForm {
   content?: string | File;
   title?: string | File;
 }
-
-type UpdatePostBodyInput = Pick<CreatePostRequestBody, "content"> &
-  Partial<Pick<CreatePostRequestBody, "title">>;
 
 interface CreateNewPostForm {
   slug?: string | File;
@@ -59,8 +29,11 @@ interface CreateNewPostForm {
   status?: string | File;
 }
 
-interface CreateNewPostValues
-  extends Pick<CreatePostRequestBody, "slug" | "title" | "excerpt" | "content"> {
+interface CreateNewPostValues {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
   status: PostStatusValue;
 }
 
@@ -86,17 +59,6 @@ class PostsController extends Data.Class<{}> {
     );
   }
 
-  static renderInternalServerErrorJson(c: AppContext, message: string, cause: unknown) {
-    const errorId = logServerError({
-      route: c.req.path,
-      method: c.req.method,
-      statusCode: 500,
-      cause,
-    });
-
-    return c.json({ error: message, errorId }, 500);
-  }
-
   static getPostPage(c: AppContext) {
     const slug = c.req.param("slug");
 
@@ -117,7 +79,11 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(c, "記事の取得に失敗しました。", cause),
+            PostsController.renderInternalServerErrorPage(
+              c,
+              "記事の取得に失敗しました。",
+              cause,
+            ),
           );
         }),
       ),
@@ -166,7 +132,7 @@ class PostsController extends Data.Class<{}> {
       return c.text("Invalid request body", 400);
     }
 
-    const updateInput: UpdatePostBodyInput = { content: form.content };
+    const updateInput: { content: string; title?: string } = { content: form.content };
     if (typeof form.title === "string") {
       const normalizedTitle = form.title.trim();
       if (!normalizedTitle) {
@@ -186,119 +152,11 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(c, "本文の更新に失敗しました。", cause),
-          );
-        }),
-      ),
-    );
-  }
-
-  static getPostsApi(c: AppContext) {
-    return Effect.runPromise(
-      listPosts(getDb(c)).pipe(
-        Effect.map(function (posts) {
-          return c.json({ posts });
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorJson(c, "Failed to fetch posts", cause),
-          );
-        }),
-      ),
-    );
-  }
-
-  static getPostApi(c: AppContext) {
-    const slug = c.req.param("slug");
-
-    return Effect.runPromise(
-      getPostWithContent(getDb(c), slug).pipe(
-        Effect.map(function (result) {
-          return c.json({ post: { ...result.post, content: result.content } });
-        }),
-        Effect.catchTag("PostNotFoundError", function () {
-          return Effect.succeed(c.json({ error: "Post not found" }, 404));
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorJson(c, "Failed to fetch post", cause),
-          );
-        }),
-      ),
-    );
-  }
-
-  static async createPostApi(c: AppContext) {
-    const body = await c.req.json().catch(function () {
-      return null;
-    });
-    const parsed = v.safeParse(CreatePostSchema, body);
-    if (!parsed.success) {
-      return c.json({ error: "Invalid request body", issues: parsed.issues }, 400);
-    }
-
-    const payload: CreatePostRequestBody = parsed.output;
-
-    return Effect.runPromise(
-      createPost(getDb(c), payload).pipe(
-        Effect.map(function (post) {
-          return c.json({ post }, 201);
-        }),
-        Effect.catchTag("SlugConflictError", function () {
-          return Effect.succeed(c.json({ error: "Slug already exists" }, 409));
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorJson(c, "Failed to create post", cause),
-          );
-        }),
-      ),
-    );
-  }
-
-  static async updatePostApi(c: AppContext) {
-    const slug = c.req.param("slug");
-    const body = await c.req.json().catch(function () {
-      return null;
-    });
-    const parsed = v.safeParse(UpdatePostSchema, body);
-    if (!parsed.success) {
-      return c.json({ error: "Invalid request body", issues: parsed.issues }, 400);
-    }
-
-    const payload: UpdatePostRequestBody = parsed.output;
-
-    return Effect.runPromise(
-      updatePost(getDb(c), slug, payload).pipe(
-        Effect.map(function (post) {
-          return c.json({ post });
-        }),
-        Effect.catchTag("PostNotFoundError", function () {
-          return Effect.succeed(c.json({ error: "Post not found" }, 404));
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorJson(c, "Failed to update post", cause),
-          );
-        }),
-      ),
-    );
-  }
-
-  static deletePostApi(c: AppContext) {
-    const slug = c.req.param("slug");
-
-    return Effect.runPromise(
-      deletePost(getDb(c), slug).pipe(
-        Effect.map(function () {
-          return c.json({ deleted: true });
-        }),
-        Effect.catchTag("PostNotFoundError", function () {
-          return Effect.succeed(c.json({ error: "Post not found" }, 404));
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorJson(c, "Failed to delete post", cause),
+            PostsController.renderInternalServerErrorPage(
+              c,
+              "本文の更新に失敗しました。",
+              cause,
+            ),
           );
         }),
       ),
@@ -313,7 +171,11 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(c, "画面の表示に失敗しました。", cause),
+            PostsController.renderInternalServerErrorPage(
+              c,
+              "画面の表示に失敗しました。",
+              cause,
+            ),
           );
         }),
       ),
@@ -328,7 +190,6 @@ class PostsController extends Data.Class<{}> {
     const excerpt = typeof form.excerpt === "string" ? form.excerpt.trim() : "";
     const content = typeof form.content === "string" ? form.content.trim() : "";
     const status: PostStatusValue = form.status === "published" ? "published" : "draft";
-
     const values: CreateNewPostValues = { slug, title, excerpt, content, status };
 
     if (!slug || !title || !excerpt || !content) {
@@ -360,21 +221,17 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(c, "記事の作成に失敗しました。", cause),
+            PostsController.renderInternalServerErrorPage(
+              c,
+              "記事の作成に失敗しました。",
+              cause,
+            ),
           );
         }),
       ),
     );
   }
 }
-
-const postsController = new Hono<{ Bindings: Bindings }>();
-
-postsController.get("/", PostsController.getPostsApi);
-postsController.get("/:slug", PostsController.getPostApi);
-postsController.post("/", PostsController.createPostApi);
-postsController.put("/:slug", PostsController.updatePostApi);
-postsController.delete("/:slug", PostsController.deletePostApi);
 
 export function getPostPage(c: AppContext) {
   return PostsController.getPostPage(c);
@@ -395,5 +252,3 @@ export function getPostNewPage(c: AppContext) {
 export function createNewPost(c: AppContext) {
   return PostsController.createNewPost(c);
 }
-
-export { postsController };

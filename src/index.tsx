@@ -1,23 +1,17 @@
-import { Effect } from "effect";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { getHomePage } from "./backend/controllers/index-controller";
 import {
   createNewPost,
   getPostBodyEditorPage,
   getPostNewPage,
   getPostPage,
-  postsController,
   updatePostBody,
 } from "./backend/controllers/posts-controller";
-import { listPublishedPosts } from "./backend/repositories/post-repository";
+import { postsApiController } from "./backend/controllers/api/posts-controller";
 import { requireApiKey } from "./backend/utils/auth";
-import { logServerError } from "./backend/utils/error-log";
 import { ErrorPage } from "./components/Error";
-import { PostCard } from "./features/posts/components/post-card";
-import { type AppContext, type Bindings, getDb } from "./db";
-import { linkButtonPillStyle } from "./lib/ui/button.css";
-import { headerRowStyle, pageTitleStyle } from "./index.css";
-import { Layout } from "./ui/layout";
+import { type AppContext, type Bindings } from "./db";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -31,54 +25,9 @@ app.use("/api/*", async function (c, next) {
   return next();
 });
 
-app.route("/api/posts", postsController);
+app.route("/api/posts", postsApiController);
 
-// ホームページ
-app.get("/", function (c) {
-  return Effect.runPromise(
-    listPublishedPosts(getDb(c)).pipe(
-      Effect.map(function (posts) {
-        c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-        return c.html(
-          <Layout>
-            <div class={headerRowStyle}>
-              <h1 class={pageTitleStyle}>Recent Posts</h1>
-              <a href="/posts/new" class={linkButtonPillStyle}>
-                <span data-role="button-content">
-                  <span data-role="button-icon" aria-hidden="true" />
-                  新規作成
-                </span>
-              </a>
-            </div>
-            {posts.map(function (post) {
-              return <PostCard key={post.id} post={post} />;
-            })}
-          </Layout>,
-        );
-      }),
-      Effect.catchAllCause(function (cause) {
-        const errorId = logServerError({
-          route: c.req.path,
-          method: c.req.method,
-          statusCode: 500,
-          cause,
-        });
-
-        return Effect.succeed(
-          c.html(
-            <ErrorPage
-              statusCode={500}
-              description="記事の取得に失敗しました。"
-              errorId={errorId}
-              showHomeLink
-            />,
-            500,
-          ),
-        );
-      }),
-    ),
-  );
-});
+app.get("/", getHomePage);
 
 app.get("/posts/new", getPostNewPage);
 app.post("/posts/new", createNewPost);
