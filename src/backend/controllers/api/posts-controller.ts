@@ -32,9 +32,9 @@ const UpdatePostSchema = v.object({
   publishedAt: v.optional(NonEmptyString),
 });
 
-interface CreatePostRequestBody extends v.InferOutput<typeof CreatePostSchema> {}
+type CreatePostRequestBody = v.InferOutput<typeof CreatePostSchema>;
 
-interface UpdatePostRequestBody extends v.InferOutput<typeof UpdatePostSchema> {}
+type UpdatePostRequestBody = v.InferOutput<typeof UpdatePostSchema>;
 
 class PostApiController extends Data.Class<{}> {
   static renderInternalServerErrorJson(c: AppContext, message: string, cause: unknown) {

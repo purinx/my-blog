@@ -16,26 +16,26 @@ import {
 
 type PostStatusValue = "draft" | "published";
 
-interface UpdatePostBodyForm {
+type UpdatePostBodyForm = {
   content?: string | File;
   title?: string | File;
-}
+};
 
-interface CreateNewPostForm {
+type CreateNewPostForm = {
   slug?: string | File;
   title?: string | File;
   excerpt?: string | File;
   content?: string | File;
   status?: string | File;
-}
+};
 
-interface CreateNewPostValues {
+type CreateNewPostValues = {
   slug: string;
   title: string;
   excerpt: string;
   content: string;
   status: PostStatusValue;
-}
+};
 
 class PostsController extends Data.Class<{}> {
   static renderPostNotFound(c: AppContext) {
