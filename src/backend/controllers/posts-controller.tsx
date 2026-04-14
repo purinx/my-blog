@@ -16,6 +16,7 @@ import {
 type UpdatePostBodyForm = {
   content?: string | File;
   title?: string | File;
+  status?: string | File;
 };
 
 class PostsController extends Data.Class<{}> {
@@ -109,7 +110,17 @@ class PostsController extends Data.Class<{}> {
       return c.text("Invalid request body", 400);
     }
 
-    const updateInput: { content: string; title?: string } = { content: form.content };
+    if (form.status !== undefined && typeof form.status !== "string") {
+      return c.text("Invalid request body", 400);
+    }
+
+    if (form.status !== undefined && form.status !== "published" && form.status !== "draft") {
+      return c.text("Invalid status", 400);
+    }
+
+    const updateInput: { content: string; title?: string; status?: "published" | "draft" } = {
+      content: form.content,
+    };
     if (typeof form.title === "string") {
       const normalizedTitle = form.title.trim();
       if (!normalizedTitle) {
@@ -117,6 +128,10 @@ class PostsController extends Data.Class<{}> {
       }
 
       updateInput.title = normalizedTitle;
+    }
+
+    if (form.status === "published" || form.status === "draft") {
+      updateInput.status = form.status;
     }
 
     return Effect.runPromise(
