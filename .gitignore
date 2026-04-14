@@ -6,4 +6,5 @@ storybook-static
 *.log
 public/client/
 tmp
-wrangler.toml
+wrangler.jsonc
+.claude/worktrees
