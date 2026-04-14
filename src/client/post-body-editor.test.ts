@@ -21,7 +21,11 @@ function createButton(): HTMLButtonElement {
   } as unknown as HTMLButtonElement;
 }
 
-function createTextArea(value: string, selectionStart: number, selectionEnd: number): HTMLTextAreaElement {
+function createTextArea(
+  value: string,
+  selectionStart: number,
+  selectionEnd: number,
+): HTMLTextAreaElement {
   return {
     value,
     selectionStart,

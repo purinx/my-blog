@@ -2,7 +2,9 @@ import type { Context } from "hono";
 
 export type Bindings = {
   DB: D1Database;
-  API_KEY?: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+  ENVIRONMENT?: string;
 };
 
 export type AppContext = Context<{ Bindings: Bindings }>;

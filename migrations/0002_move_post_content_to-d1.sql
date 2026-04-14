@@ -1,5 +1,3 @@
-BEGIN TRANSACTION;
-
 CREATE TABLE posts_new (
   id            TEXT PRIMARY KEY,
   slug          TEXT NOT NULL UNIQUE,
@@ -34,5 +32,3 @@ ALTER TABLE posts_new RENAME TO posts;
 
 CREATE INDEX idx_posts_slug ON posts (slug);
 CREATE INDEX idx_posts_status ON posts (status, published_at DESC);
-
-COMMIT;

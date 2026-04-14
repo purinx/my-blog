@@ -9,10 +9,8 @@
     "build:client": "vite build --mode client",
     "build:server": "vite build",
     "build": "vite build --mode client && vite build",
-    "prepreview": "vite build --mode client && vite build",
-    "preview": "wrangler pages dev ./dist",
-    "predeploy": "vite build --mode client && vite build",
-    "deploy": "wrangler pages deploy",
+    "preview": "$npm_execpath run build && wrangler dev --env preview",
+    "deploy": "$npm_execpath run build && wrangler deploy",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "prettier --write .",
@@ -59,12 +57,5 @@
     "vitest": "^4.1.2",
     "wrangler": "^4.80.0"
   },
-  "packageManager": "pnpm@10.26.2+sha512.0e308ff2005fc7410366f154f625f6631ab2b16b1d2e70238444dd6ae9d630a8482d92a451144debc492416896ed16f7b114a86ec68b8404b2443869e68ffda6",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
-  }
+  "packageManager": "pnpm@10.26.2+sha512.0e308ff2005fc7410366f154f625f6631ab2b16b1d2e70238444dd6ae9d630a8482d92a451144debc492416896ed16f7b114a86ec68b8404b2443869e68ffda6"
 }

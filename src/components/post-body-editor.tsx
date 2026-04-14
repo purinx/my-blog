@@ -15,6 +15,9 @@ import {
   saveRowStyle,
   sidebarNavStyle,
   sidebarStyle,
+  statusLabelStyle,
+  statusRowStyle,
+  statusSelectStyle,
   tabLinkStyle,
   tabListStyle,
   tabTitleStyle,
@@ -64,7 +67,11 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
         <div class={editorContentFrameStyle}>
           <section class={editorContentStyle}>
             <div class={headerRowStyle}>
-              <IconButton href={`/posts/${post.slug}`} class={backIconButtonStyle} label="記事を見る">
+              <IconButton
+                href={`/posts/${post.slug}`}
+                class={backIconButtonStyle}
+                label="記事を見る"
+              >
                 <img src="/icons/chevron-left.svg" alt="" aria-hidden="true" />
               </IconButton>
               <div class={headingGroupStyle}>
@@ -90,12 +97,33 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
                 data-state={submitState}
               >
                 <span data-role="submit-content">
-                  <span id="post-body-editor-submit-icon" data-role="submit-icon" aria-hidden="true" />
+                  <span
+                    id="post-body-editor-submit-icon"
+                    data-role="submit-icon"
+                    aria-hidden="true"
+                  />
                   <span data-role="submit-label">{submitLabel}</span>
                 </span>
               </Button>
             </div>
             <form id="post-body-editor-form" method="post" class={formStyle}>
+              <div class={statusRowStyle}>
+                <label for="post-body-editor-status" class={statusLabelStyle}>
+                  公開設定
+                </label>
+                <select
+                  id="post-body-editor-status"
+                  name="status"
+                  class={statusSelectStyle}
+                >
+                  <option value="published" selected={post.status === "published"}>
+                    公開
+                  </option>
+                  <option value="draft" selected={post.status === "draft"}>
+                    下書き
+                  </option>
+                </select>
+              </div>
               <label for="post-body-editor-textarea" class={labelStyle}>
                 本文 (Markdown)
               </label>

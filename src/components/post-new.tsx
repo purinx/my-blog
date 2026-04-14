@@ -23,17 +23,45 @@ import { errorStyle, fieldGroupStyle, inputStyle, selectStyle } from "./post-new
 
 type PostNewProps = {
   posts: Post[];
-  error?: string;
-  values?: {
-    slug?: string;
-    title?: string;
-    excerpt?: string;
-    content?: string;
-    status?: string;
-  };
 };
 
-export function PostNew({ posts, error, values }: PostNewProps) {
+const submitScript = `
+document.getElementById('post-new-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var form = e.currentTarget;
+  var els = form.elements;
+  var errorEl = document.getElementById('post-new-error');
+  errorEl.hidden = true;
+  var data = {
+    slug: els['slug'].value.trim(),
+    title: els['title'].value.trim(),
+    excerpt: els['excerpt'].value.trim(),
+    content: els['content'].value.trim(),
+    status: els['status'].value,
+  };
+  try {
+    var res = await fetch('/api/posts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    var body = await res.json();
+    if (res.status === 201) {
+      window.location.href = '/posts/' + body.post.slug + '/edit';
+    } else {
+      errorEl.textContent = body.error || '記事の作成に失敗しました。';
+      errorEl.hidden = false;
+    }
+  } catch (_) {
+    errorEl.textContent = '記事の作成に失敗しました。';
+    errorEl.hidden = false;
+  }
+});
+`;
+
+export function PostNew({ posts }: PostNewProps) {
   return (
     <Layout hideFooter wide fullWidth>
       <div class={editorShellStyle}>
@@ -49,11 +77,7 @@ export function PostNew({ posts, error, values }: PostNewProps) {
               {posts.map(function (item) {
                 return (
                   <li key={item.id}>
-                    <a
-                      href={`/posts/${item.slug}/edit`}
-                      class={tabLinkStyle}
-                      data-active="false"
-                    >
+                    <a href={`/posts/${item.slug}/edit`} class={tabLinkStyle} data-active="false">
                       <span class={tabTitleStyle}>{item.title}</span>
                     </a>
                   </li>
@@ -74,9 +98,7 @@ export function PostNew({ posts, error, values }: PostNewProps) {
                   name="title"
                   form="post-new-form"
                   placeholder="タイトル"
-                >
-                  {values?.title ?? ""}
-                </textarea>
+                ></textarea>
               </div>
             </div>
             <div class={saveRowStyle}>
@@ -86,10 +108,12 @@ export function PostNew({ posts, error, values }: PostNewProps) {
                 </span>
               </Button>
             </div>
-            <form id="post-new-form" method="post" action="/posts/new" class={formStyle}>
-              {error ? <p class={errorStyle}>{error}</p> : null}
+            <form id="post-new-form" class={formStyle}>
+              <p id="post-new-error" class={errorStyle} hidden={true}></p>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-slug">Slug</label>
+                <label class={labelStyle} for="post-new-slug">
+                  Slug
+                </label>
                 <input
                   id="post-new-slug"
                   name="slug"
@@ -97,11 +121,12 @@ export function PostNew({ posts, error, values }: PostNewProps) {
                   required
                   placeholder="my-new-post"
                   class={inputStyle}
-                  value={values?.slug ?? ""}
                 />
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-excerpt">概要</label>
+                <label class={labelStyle} for="post-new-excerpt">
+                  概要
+                </label>
                 <input
                   id="post-new-excerpt"
                   name="excerpt"
@@ -109,26 +134,28 @@ export function PostNew({ posts, error, values }: PostNewProps) {
                   required
                   placeholder="記事の概要"
                   class={inputStyle}
-                  value={values?.excerpt ?? ""}
                 />
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-status">ステータス</label>
+                <label class={labelStyle} for="post-new-status">
+                  ステータス
+                </label>
                 <select id="post-new-status" name="status" class={selectStyle}>
-                  <option value="draft" selected={values?.status !== "published"}>下書き</option>
-                  <option value="published" selected={values?.status === "published"}>公開</option>
+                  <option value="draft">下書き</option>
+                  <option value="published">公開</option>
                 </select>
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-content">本文 (Markdown)</label>
-                <textarea id="post-new-content" name="content" class={textareaStyle}>
-                  {values?.content ?? ""}
-                </textarea>
+                <label class={labelStyle} for="post-new-content">
+                  本文 (Markdown)
+                </label>
+                <textarea id="post-new-content" name="content" class={textareaStyle}></textarea>
               </div>
             </form>
           </section>
         </div>
       </div>
+      <script dangerouslySetInnerHTML={{ __html: submitScript }} />
     </Layout>
   );
 }

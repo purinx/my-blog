@@ -182,6 +182,40 @@ export const formStyle = css`
   padding-top: 2rem;
 `;
 
+export const statusRowStyle = css`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 0.25rem;
+`;
+
+export const statusLabelStyle = css`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+`;
+
+export const statusSelectStyle = css`
+  appearance: none;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.35rem 2rem 0.35rem 0.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  &:focus {
+    outline: 2px solid var(--accent-outline);
+    outline-offset: 2px;
+  }
+`;
+
 export const labelStyle = css`
   font-weight: 600;
 `;
