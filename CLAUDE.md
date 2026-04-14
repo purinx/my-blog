@@ -58,11 +58,10 @@ This is a **Hono SSR blog** running on **Cloudflare Pages**, with:
 
 - Keep component responsibilities small and focused:
   - `src/ui` — UI primitive components
-  - `src/lib/ui` — Shared UI components reused across features/pages
   - `src/features/` — Feature-scoped packages; subdirectories allowed
     - e.g. `components/`, `hooks/`
   - `src/components/` — Container components referenced directly from `src/index.tsx`
-- Prefer extracting reusable UI parts into `src/lib/ui` before adding page-specific UI in `src/components/`
+- Prefer extracting reusable UI parts into `src/ui` before adding page-specific UI in `src/components/`
 
 ### Backend
 

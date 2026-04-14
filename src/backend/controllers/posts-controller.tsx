@@ -7,45 +7,26 @@ import type { AppContext } from "../../db";
 import { getDb } from "../../db";
 import { logServerError } from "../utils/error-log";
 import {
-  createPost,
   getPostWithContent,
   getPublishedPostWithContent,
   listPosts,
   updatePost,
 } from "../repositories/post-repository";
 
-type PostStatusValue = "draft" | "published";
-
 type UpdatePostBodyForm = {
   content?: string | File;
   title?: string | File;
 };
 
-type CreateNewPostForm = {
-  slug?: string | File;
-  title?: string | File;
-  excerpt?: string | File;
-  content?: string | File;
-  status?: string | File;
-};
-
-type CreateNewPostValues = {
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  status: PostStatusValue;
-};
-
 class PostsController extends Data.Class<{}> {
-  static renderPostNotFound(c: AppContext) {
+  private static renderPostNotFound(c: AppContext) {
     return c.html(
       <ErrorPage statusCode={404} description="記事が見つかりませんでした。" showHomeLink />,
       404,
     );
   }
 
-  static renderInternalServerErrorPage(c: AppContext, description: string, cause: unknown) {
+  private static renderInternalServerErrorPage(c: AppContext, description: string, cause: unknown) {
     const errorId = logServerError({
       route: c.req.path,
       method: c.req.method,
@@ -167,63 +148,13 @@ class PostsController extends Data.Class<{}> {
     return Effect.runPromise(
       listPosts(getDb(c)).pipe(
         Effect.map(function (posts) {
-          return c.html(<PostNew posts={posts} />);
+          return c.html(<PostNew posts={posts} apiKey={c.env.API_KEY ?? ""} />);
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
             PostsController.renderInternalServerErrorPage(
               c,
               "画面の表示に失敗しました。",
-              cause,
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  static async createNewPost(c: AppContext) {
-    const form = (await c.req.parseBody()) as CreateNewPostForm;
-
-    const slug = typeof form.slug === "string" ? form.slug.trim() : "";
-    const title = typeof form.title === "string" ? form.title.trim() : "";
-    const excerpt = typeof form.excerpt === "string" ? form.excerpt.trim() : "";
-    const content = typeof form.content === "string" ? form.content.trim() : "";
-    const status: PostStatusValue = form.status === "published" ? "published" : "draft";
-    const values: CreateNewPostValues = { slug, title, excerpt, content, status };
-
-    if (!slug || !title || !excerpt || !content) {
-      const posts = await Effect.runPromise(listPosts(getDb(c)));
-      return c.html(
-        <PostNew posts={posts} error="すべての項目を入力してください。" values={values} />,
-        422,
-      );
-    }
-
-    return Effect.runPromise(
-      createPost(getDb(c), values).pipe(
-        Effect.map(function (post) {
-          return c.redirect(`/posts/${post.slug}/edit`, 303);
-        }),
-        Effect.catchTag("SlugConflictError", function () {
-          return listPosts(getDb(c)).pipe(
-            Effect.map(function (posts) {
-              return c.html(
-                <PostNew
-                  posts={posts}
-                  error={`スラッグ "${slug}" はすでに使われています。`}
-                  values={values}
-                />,
-                409,
-              );
-            }),
-          );
-        }),
-        Effect.catchAllCause(function (cause) {
-          return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(
-              c,
-              "記事の作成に失敗しました。",
               cause,
             ),
           );
@@ -247,8 +178,4 @@ export function updatePostBody(c: AppContext) {
 
 export function getPostNewPage(c: AppContext) {
   return PostsController.getPostNewPage(c);
-}
-
-export function createNewPost(c: AppContext) {
-  return PostsController.createNewPost(c);
 }
