@@ -106,25 +106,24 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
                 </span>
               </Button>
             </div>
-            <div class={statusRowStyle}>
-              <label for="post-body-editor-status" class={statusLabelStyle}>
-                公開設定
-              </label>
-              <select
-                id="post-body-editor-status"
-                name="status"
-                form="post-body-editor-form"
-                class={statusSelectStyle}
-              >
-                <option value="published" selected={post.status === "published"}>
-                  公開
-                </option>
-                <option value="draft" selected={post.status === "draft"}>
-                  下書き
-                </option>
-              </select>
-            </div>
             <form id="post-body-editor-form" method="post" class={formStyle}>
+              <div class={statusRowStyle}>
+                <label for="post-body-editor-status" class={statusLabelStyle}>
+                  公開設定
+                </label>
+                <select
+                  id="post-body-editor-status"
+                  name="status"
+                  class={statusSelectStyle}
+                >
+                  <option value="published" selected={post.status === "published"}>
+                    公開
+                  </option>
+                  <option value="draft" selected={post.status === "draft"}>
+                    下書き
+                  </option>
+                </select>
+              </div>
               <label for="post-body-editor-textarea" class={labelStyle}>
                 本文 (Markdown)
               </label>

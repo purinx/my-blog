@@ -9,7 +9,7 @@
     "build:client": "vite build --mode client",
     "build:server": "vite build",
     "build": "vite build --mode client && vite build",
-    "preview": "$npm_execpath run build && wrangler dev",
+    "preview": "$npm_execpath run build && wrangler dev --env preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",

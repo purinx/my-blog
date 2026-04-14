@@ -44,6 +44,24 @@ export const githubButtonStyle = css`
   }
 `;
 
+export const devBypassButtonStyle = css`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.2rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+  &:hover {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+  }
+`;
+
 export const errorStyle = css`
   color: #c0392b;
   font-size: 0.875rem;

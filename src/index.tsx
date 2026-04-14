@@ -10,6 +10,7 @@ import {
 } from "./backend/controllers/posts-controller";
 import { postsApiController } from "./backend/controllers/api/posts-controller";
 import {
+  devBypassLogin,
   getLoginPage,
   githubCallback,
   logout,
@@ -40,6 +41,7 @@ app.route("/api/posts", postsApiController);
 
 app.get("/login", getLoginPage);
 app.get("/login/github", redirectToGitHub);
+app.post("/login/dev-bypass", devBypassLogin);
 app.get("/auth/callback", githubCallback);
 app.post("/logout", logout);
 

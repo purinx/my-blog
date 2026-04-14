@@ -77,7 +77,22 @@ export function getLoginPage(c: AppContext) {
         }
         const error = c.req.query("error") ?? undefined;
         const next = safeNextPath(c.req.query("next"));
-        return c.html(<LoginPage error={error} next={next} />);
+        const devBypass = c.env.ENVIRONMENT === "preview";
+        return c.html(<LoginPage error={error} next={next} devBypass={devBypass} />);
+      }),
+    ),
+  );
+}
+
+export function devBypassLogin(c: AppContext) {
+  if (c.env.ENVIRONMENT !== "preview") {
+    return c.redirect("/login?error=forbidden", 302);
+  }
+  const next = safeNextPath(c.req.query("next"));
+  return Effect.runPromise(
+    setAdminSession(c).pipe(
+      Effect.map(function () {
+        return c.redirect(next, 302);
       }),
     ),
   );
