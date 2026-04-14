@@ -6,3 +6,4 @@ storybook-static
 *.log
 public/client/
 tmp
+wrangler.toml
