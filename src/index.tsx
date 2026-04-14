@@ -15,7 +15,7 @@ import {
   logout,
   redirectToGitHub,
 } from "./backend/controllers/auth-controller";
-import { requireAdminSession, requireApiKey } from "./backend/utils/auth";
+import { requireAdminSession } from "./backend/utils/auth";
 import { ErrorPage } from "./components/Error";
 import { type AppContext, type Bindings } from "./db";
 import { Effect } from "effect";
@@ -25,10 +25,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use(logger());
 
 app.use("/api/*", async function (c, next) {
-  const unauthorized = requireApiKey(c as AppContext);
-  if (unauthorized) {
-    return unauthorized;
-  }
+  const redirect = await Effect.runPromise(requireAdminSession(c as AppContext));
+  if (redirect) return redirect;
   return next();
 });
 

@@ -32,12 +32,7 @@ import {
   setAdminSession,
   setOAuthState,
 } from "../utils/auth";
-import {
-  getLoginPage,
-  githubCallback,
-  logout,
-  redirectToGitHub,
-} from "./auth-controller";
+import { getLoginPage, githubCallback, logout, redirectToGitHub } from "./auth-controller";
 
 const env = {
   DB: {} as D1Database,
@@ -204,10 +199,7 @@ describe("githubCallback", function () {
   it("redirects to /login?error=invalid when GitHub API fails", async function () {
     vi.mocked(consumeOAuthState).mockReturnValue("/posts/new");
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValueOnce(new Error("network error")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(new Error("network error")));
 
     const res = await createApp().request(
       "http://localhost/auth/callback?code=github-code&state=valid-uuid",
@@ -223,11 +215,7 @@ describe("githubCallback", function () {
 
 describe("logout", function () {
   it("clears the session and redirects to /", async function () {
-    const res = await createApp().request(
-      "http://localhost/logout",
-      { method: "POST" },
-      env,
-    );
+    const res = await createApp().request("http://localhost/logout", { method: "POST" }, env);
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe("/");
     expect(clearAdminSession).toHaveBeenCalledTimes(1);

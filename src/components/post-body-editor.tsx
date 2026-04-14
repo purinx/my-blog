@@ -64,7 +64,11 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
         <div class={editorContentFrameStyle}>
           <section class={editorContentStyle}>
             <div class={headerRowStyle}>
-              <IconButton href={`/posts/${post.slug}`} class={backIconButtonStyle} label="記事を見る">
+              <IconButton
+                href={`/posts/${post.slug}`}
+                class={backIconButtonStyle}
+                label="記事を見る"
+              >
                 <img src="/icons/chevron-left.svg" alt="" aria-hidden="true" />
               </IconButton>
               <div class={headingGroupStyle}>
@@ -90,7 +94,11 @@ export function PostBodyEditor({ post, content, posts }: PostBodyEditorProps) {
                 data-state={submitState}
               >
                 <span data-role="submit-content">
-                  <span id="post-body-editor-submit-icon" data-role="submit-icon" aria-hidden="true" />
+                  <span
+                    id="post-body-editor-submit-icon"
+                    data-role="submit-icon"
+                    aria-hidden="true"
+                  />
                   <span data-role="submit-label">{submitLabel}</span>
                 </span>
               </Button>

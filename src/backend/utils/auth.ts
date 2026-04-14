@@ -2,31 +2,6 @@ import { Effect } from "effect";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppContext } from "../../db";
 
-// ---- API key auth (for /api/* routes) ----
-
-const DEFAULT_API_KEY = "temp-api-key";
-
-function getExpectedApiKey(c: AppContext): string {
-  return c.env.API_KEY ?? DEFAULT_API_KEY;
-}
-
-function getProvidedApiKey(c: AppContext): string | undefined {
-  const authHeader = c.req.header("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice("Bearer ".length);
-  }
-  return c.req.header("x-api-key");
-}
-
-export function requireApiKey(c: AppContext): Response | undefined {
-  const expected = getExpectedApiKey(c);
-  const provided = getProvidedApiKey(c);
-  if (!provided || provided !== expected) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  return undefined;
-}
-
 // ---- Admin session auth (for admin pages) ----
 
 const SESSION_COOKIE = "session";

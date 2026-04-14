@@ -60,11 +60,7 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(
-              c,
-              "記事の取得に失敗しました。",
-              cause,
-            ),
+            PostsController.renderInternalServerErrorPage(c, "記事の取得に失敗しました。", cause),
           );
         }),
       ),
@@ -133,11 +129,7 @@ class PostsController extends Data.Class<{}> {
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(
-              c,
-              "本文の更新に失敗しました。",
-              cause,
-            ),
+            PostsController.renderInternalServerErrorPage(c, "本文の更新に失敗しました。", cause),
           );
         }),
       ),
@@ -148,15 +140,11 @@ class PostsController extends Data.Class<{}> {
     return Effect.runPromise(
       listPosts(getDb(c)).pipe(
         Effect.map(function (posts) {
-          return c.html(<PostNew posts={posts} apiKey={c.env.API_KEY ?? ""} />);
+          return c.html(<PostNew posts={posts} />);
         }),
         Effect.catchAllCause(function (cause) {
           return Effect.succeed(
-            PostsController.renderInternalServerErrorPage(
-              c,
-              "画面の表示に失敗しました。",
-              cause,
-            ),
+            PostsController.renderInternalServerErrorPage(c, "画面の表示に失敗しました。", cause),
           );
         }),
       ),

@@ -23,7 +23,6 @@ import { errorStyle, fieldGroupStyle, inputStyle, selectStyle } from "./post-new
 
 type PostNewProps = {
   posts: Post[];
-  apiKey: string;
 };
 
 const submitScript = `
@@ -45,7 +44,6 @@ document.getElementById('post-new-form').addEventListener('submit', async functi
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + form.dataset.apiKey,
       },
       body: JSON.stringify(data),
     });
@@ -63,7 +61,7 @@ document.getElementById('post-new-form').addEventListener('submit', async functi
 });
 `;
 
-export function PostNew({ posts, apiKey }: PostNewProps) {
+export function PostNew({ posts }: PostNewProps) {
   return (
     <Layout hideFooter wide fullWidth>
       <div class={editorShellStyle}>
@@ -79,11 +77,7 @@ export function PostNew({ posts, apiKey }: PostNewProps) {
               {posts.map(function (item) {
                 return (
                   <li key={item.id}>
-                    <a
-                      href={`/posts/${item.slug}/edit`}
-                      class={tabLinkStyle}
-                      data-active="false"
-                    >
+                    <a href={`/posts/${item.slug}/edit`} class={tabLinkStyle} data-active="false">
                       <span class={tabTitleStyle}>{item.title}</span>
                     </a>
                   </li>
@@ -114,10 +108,12 @@ export function PostNew({ posts, apiKey }: PostNewProps) {
                 </span>
               </Button>
             </div>
-            <form id="post-new-form" class={formStyle} data-api-key={apiKey}>
+            <form id="post-new-form" class={formStyle}>
               <p id="post-new-error" class={errorStyle} hidden={true}></p>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-slug">Slug</label>
+                <label class={labelStyle} for="post-new-slug">
+                  Slug
+                </label>
                 <input
                   id="post-new-slug"
                   name="slug"
@@ -128,7 +124,9 @@ export function PostNew({ posts, apiKey }: PostNewProps) {
                 />
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-excerpt">概要</label>
+                <label class={labelStyle} for="post-new-excerpt">
+                  概要
+                </label>
                 <input
                   id="post-new-excerpt"
                   name="excerpt"
@@ -139,14 +137,18 @@ export function PostNew({ posts, apiKey }: PostNewProps) {
                 />
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-status">ステータス</label>
+                <label class={labelStyle} for="post-new-status">
+                  ステータス
+                </label>
                 <select id="post-new-status" name="status" class={selectStyle}>
                   <option value="draft">下書き</option>
                   <option value="published">公開</option>
                 </select>
               </div>
               <div class={fieldGroupStyle}>
-                <label class={labelStyle} for="post-new-content">本文 (Markdown)</label>
+                <label class={labelStyle} for="post-new-content">
+                  本文 (Markdown)
+                </label>
                 <textarea id="post-new-content" name="content" class={textareaStyle}></textarea>
               </div>
             </form>

@@ -1,13 +1,17 @@
-# Blog (Hono + React on Cloudflare Pages)
+# Blog (Hono SSR on Cloudflare Pages)
 
-Minimal blog app built with Hono and React, rendered on the edge and deployed via Cloudflare Pages.
+Minimal blog app built with Hono SSR, deployed on Cloudflare Pages with D1 as the database.
 
 ## Tech Stack
 
 - Hono (HTTP framework + JSX SSR)
-- React 18 (JSX UI)
-- Vite (build/dev)
-- Cloudflare Pages/Workers (deployment target via Wrangler)
+- React 18 (JSX UI, server-rendered only)
+- Vite (build/dev via `@hono/vite-cloudflare-pages`)
+- Cloudflare Pages + D1 (deployment target)
+- Effect (async / error handling in backend)
+- Valibot (request validation)
+- Vitest (unit tests)
+- Storybook (UI component development)
 - Prettier (format)
 - Oxlint (lint)
 - TypeScript
@@ -15,12 +19,13 @@ Minimal blog app built with Hono and React, rendered on the edge and deployed vi
 
 ## Features
 
-- Home page that lists recent posts
+- Home page listing recent posts
 - Post detail pages routed by slug (`/posts/:slug`)
-- Simple Markdown-to-HTML rendering for post content
+- Table of contents sidebar per post
+- Markdown-to-HTML rendering via unified/remark/rehype pipeline
 - Server-side rendered HTML using Hono JSX
-- Componentized layout and post cards
-- Basic responsive styling with `hono/css`
+- Post create / edit UI with live Markdown editor
+- Auth (login) page
 
 ## Getting Started
 
@@ -28,12 +33,26 @@ Minimal blog app built with Hono and React, rendered on the edge and deployed vi
 
 - Node.js
 - pnpm
-- Cloudflare Wrangler CLI (optional for preview/deploy)
+- Cloudflare Wrangler CLI
 
 ### Install
 
 ```bash
 pnpm install
+```
+
+### Environment variables
+
+For local development, create a `.env` file in the project root:
+
+```
+API_KEY=your-local-api-key
+```
+
+For production, register secrets via Wrangler:
+
+```bash
+wrangler secret put API_KEY
 ```
 
 ### Development
@@ -72,14 +91,35 @@ pnpm preview
 pnpm deploy
 ```
 
+### DB
+
+```bash
+pnpm sqlite         # open local D1 SQLite DB
+```
+
+Migrations are in `migrations/` and applied via Wrangler.
+
 ## Project Structure
 
-- `src/index.tsx`: Hono app, routes, and sample post data
-- `src/components/Layout.tsx`: shared layout shell and global styles
-- `src/components/PostCard.tsx`: post list item component
-- `wrangler.toml`: Cloudflare Pages configuration
-
-## Notes
-
-- Post data is currently in-memory. Replace `posts` in `src/index.tsx` with a database or CMS when you’re ready.
-- `compatibility_date` is set in `wrangler.toml` for Cloudflare runtime stability.
+```
+src/
+  index.tsx                    # Hono app entry; all routes
+  backend/
+    controllers/               # One controller per REST resource
+      api/                     # API routes (/api/*)
+    repositories/              # All D1 data access
+    domain/
+      post/                    # Post model + value objects (Effect Data.Class)
+    utils/
+  db/
+    index.ts                   # Bindings (D1, API_KEY) + getDb helper
+  components/                  # Container components used directly from routes
+  features/
+    post/components/           # Post detail feature components
+    posts/components/          # Post list feature components
+  ui/                          # Reusable UI primitives
+  client/                      # Client-side scripts (Markdown editor)
+  utils/
+    markdown.ts                # Markdown → HTML + TOC extraction
+migrations/                    # D1 SQL migration files
+```

@@ -8,3 +8,4 @@ public/client/
 tmp
 wrangler.jsonc
 .claude/worktrees
+.env
